@@ -63,5 +63,13 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.5")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
 
+// HorizontalPager (Pager itself)
+    implementation("com.google.accompanist:accompanist-pager:0.32.0")
+
+// Pager Indicator (for HorizontalPagerIndicator)
+    implementation("com.google.accompanist:accompanist-pager-indicators:0.32.0")
+
+
+
 
 }
