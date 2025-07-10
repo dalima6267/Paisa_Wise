@@ -14,55 +14,57 @@ import com.dalima.paisawise.ui.theme.LightGreen
 import com.dalima.paisawise.ui.theme.LighterGreen
 import com.google.accompanist.pager.*
 import kotlinx.coroutines.launch
-
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun OnboardingScreen(onFinished: () -> Unit) {
     val pagerState = rememberPagerState()
     val scope = rememberCoroutineScope()
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(LightGreen)
     ) {
+        // Pager (fills the screen)
         HorizontalPager(
             count = onboardingPages.size,
             state = pagerState,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.fillMaxSize()
         ) { page ->
             OnboardingPageView(onboardingPages[page])
         }
 
-        // Indicator + Button
-        Row(
+        // Dot Indicator - centered at bottom
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 45.dp)
         ) {
             HorizontalPagerIndicator(
                 pagerState = pagerState,
                 activeColor = Color.White,
                 inactiveColor = Color.LightGray
             )
+        }
 
-            FloatingActionButton(
-                onClick = {
-                    if (pagerState.currentPage == onboardingPages.lastIndex) {
-                        onFinished()
-                    } else {
-                        scope.launch {
-                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                        }
+        // Arrow Button - bottom end
+        FloatingActionButton(
+            onClick = {
+                if (pagerState.currentPage == onboardingPages.lastIndex) {
+                    onFinished()
+                } else {
+                    scope.launch {
+                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
                     }
-                },
-                containerColor = LighterGreen,
-                contentColor = Color.Black
-            ) {
-                Icon(Icons.Default.ArrowForward, contentDescription = "Next")
-            }
+                }
+            },
+            containerColor = LighterGreen,
+            contentColor = Color.Black,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(24.dp)
+        ) {
+            Icon(Icons.Default.ArrowForward, contentDescription = "Next")
         }
     }
 }

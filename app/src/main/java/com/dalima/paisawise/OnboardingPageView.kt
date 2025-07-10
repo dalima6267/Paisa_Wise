@@ -4,8 +4,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
@@ -27,46 +29,53 @@ fun OnboardingPageView(page: OnboardingPage) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(horizontal = 24.dp, vertical = 32.dp)
             .background(LightGreen),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceEvenly
+        verticalArrangement = Arrangement.Bottom
     ) {
         Image(
             painter = painterResource(id = page.imageRes),
             contentDescription = null,
             modifier = Modifier.size(250.dp)
         )
-        Text(
-            text = page.title,
-            style = MaterialTheme.typography.titleLarge,
-            color = White40,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            text = page.description,
-            style = MaterialTheme.typography.bodyMedium,
-            color = Gray,
-            fontSize = 14.sp,
-            textAlign = TextAlign.Center
-        )
+        Spacer(modifier = Modifier.height(30.dp))
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = page.title,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = White40,
+                textAlign = TextAlign.Center,
+                lineHeight = 32.sp
+            )
+            Spacer(modifier = Modifier.padding(top = 8.dp))
+            Text(
+                text = page.description,
+                fontSize = 14.sp,
+                color = Gray,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(200.dp))
     }
 }
 val onboardingPages = listOf(
     OnboardingPage(
-        title = "Gain total control of your money",
-        description = "Become your own money manager and make every cent count",
+        title = "Gain total control\nof your money",
+        description = "Become your own money manager\nand make every cent count",
         imageRes = R.drawable.onboarding_2_paisawise
     ),
     OnboardingPage(
-        title = "Know where your money goes",
-        description = "Track your transaction easily, with categories and financial report",
+        title = "Know where your\nmoney goes",
+        description = "Track your transaction easily,\nwith categories and financial report",
         imageRes = R.drawable.onboarding_2_paisawise
     ),
     OnboardingPage(
         title = "Plan ahead\nStay on track",
-        description = "Setup your budget for each category and stay in control",
+        description = "Setup your budget for each\ncategory and stay in control",
         imageRes = R.drawable.onboarding_3_paisawise
     )
 )
