@@ -38,7 +38,13 @@ class MainActivity : ComponentActivity() {
                         OnboardingScreen { navController.navigate(Screen.SignIn.name) }
                     }
                     composable(Screen.SignIn.name) {
-                        SignInScreen()
+                        SignInScreen(
+                           onSwitchClick = { navController.navigate(Screen.SignUp.name) }
+                        )
+                    }
+                    composable(Screen.SignUp.name) {
+                        SignUpScreen(
+                        )
                     }
                 }
             }

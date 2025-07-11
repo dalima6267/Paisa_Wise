@@ -11,9 +11,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.material3.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,21 +30,30 @@ fun SplashScreen(onTimeout: () -> Unit) {
         delay(2000)
         onTimeout()
     }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightGreen), // Green background
+            .background(LightGreen),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
-                painter = painterResource(id = R.drawable.paisawise_logo), // your logo
+                painter = painterResource(id = R.drawable.paisawise_logo),
                 contentDescription = "App Logo",
-                modifier = Modifier.size(120.dp),
-            )
+                modifier = Modifier
+                    .size(120.dp)
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        ambientColor = Color.Black.copy(alpha = 0f), // light black shadow
+                        spotColor = Color.Black.copy(alpha = 0f)
 
+                    )
+            )
         }
     }
 }
+
 
 

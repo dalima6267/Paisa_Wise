@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.dalima.paisawise.ui.theme.LightGreen
 import com.dalima.paisawise.ui.theme.LighterGreen
@@ -38,7 +39,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 45.dp)
+                .padding(bottom = 70.dp)
         ) {
             HorizontalPagerIndicator(
                 pagerState = pagerState,
@@ -62,9 +63,16 @@ fun OnboardingScreen(onFinished: () -> Unit) {
             contentColor = Color.Black,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(24.dp)
+                .padding(60.dp)
+                .width(50.dp)
+                .height(35.dp)
         ) {
             Icon(Icons.Default.ArrowForward, contentDescription = "Next")
         }
     }
+}
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun OnboardingScreenPreview(){
+    OnboardingScreen(onFinished = {})
 }
