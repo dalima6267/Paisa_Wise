@@ -69,6 +69,7 @@ dependencies {
 // Pager Indicator (for HorizontalPagerIndicator)
     implementation("com.google.accompanist:accompanist-pager-indicators:0.32.0")
 
+    implementation("androidx.compose.foundation:foundation:1.6.1") // or latest version
 
 
 
