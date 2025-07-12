@@ -44,6 +44,10 @@ class MainActivity : ComponentActivity() {
                     }
                     composable(Screen.SignUp.name) {
                         SignUpScreen(
+                            onSwitchClick = { navController.navigate(Screen.SignIn.name) },
+                            isChecked = false,
+                            onCheckedChange = {},
+                            onPrivacyPolicyClick = {}
                         )
                     }
                 }

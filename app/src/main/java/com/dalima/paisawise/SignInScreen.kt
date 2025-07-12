@@ -36,12 +36,14 @@ import androidx.compose.material3.AlertDialogDefaults.containerColor
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 
 import androidx.compose.ui.unit.sp
 import com.dalima.paisawise.ui.theme.ButtonGreen
 import com.dalima.paisawise.ui.theme.DarkGreen
 import com.dalima.paisawise.ui.theme.LightGreen
+import com.dalima.paisawise.ui.theme.LighterGreen
 
 @Composable
 fun SignInScreen( onSwitchClick: () -> Unit) {
@@ -159,24 +161,34 @@ Spacer(modifier = Modifier.height(8.dp))
             color = Color.Gray
                )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             SocialLoginButton(R.drawable.ic_google)
             SocialLoginButton(R.drawable.ic_facebook)
         }
 
-        Spacer(modifier = Modifier.height(22.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
         ClickableText(
             text = buildAnnotatedString {
-                append("Don't have an account? ")
-                withStyle(style = SpanStyle(LightGreen, fontWeight = FontWeight.Bold)) {
+                // First part in gray
+                withStyle(style = SpanStyle(color = Color.Gray)) {
+                    append("Don't have an account? ")
+                }
+                // Second part in LightGreen, bold, and underlined
+                withStyle(
+                    style = SpanStyle(
+                        color = LightGreen,
+                        textDecoration = TextDecoration.Underline
+                    )
+                ) {
                     append("SIGN UP")
                 }
             },
             onClick = { onSwitchClick() }
         )
+
     }
 }
 @Preview(showBackground = true, showSystemUi = true)
