@@ -40,13 +40,15 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.dalima.paisawise.ui.theme.ButtonGreen
 import com.dalima.paisawise.ui.theme.DarkGreen
 import com.dalima.paisawise.ui.theme.LightGreen
 import com.dalima.paisawise.ui.theme.LighterGreen
 
 @Composable
-fun SignInScreen( onSwitchClick: () -> Unit) {
+fun SignInScreen(     navController: NavController,onSwitchClick: () -> Unit) {
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -145,7 +147,7 @@ Spacer(modifier = Modifier.height(8.dp))
                 .fillMaxWidth()
                 .padding(horizontal = 70.dp),
 
-            onClick = { /* Do nothing */ },
+            onClick = {navController.navigate(Screen.ExpenseCategory.name)},
             shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = ButtonGreen,
@@ -195,6 +197,7 @@ Spacer(modifier = Modifier.height(8.dp))
 @Composable
 fun SignInScreenPreview() {
     SignInScreen(
+        navController = rememberNavController(),
         onSwitchClick = {}
     )
 }

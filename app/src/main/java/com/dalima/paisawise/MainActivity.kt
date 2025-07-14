@@ -39,6 +39,7 @@ class MainActivity : ComponentActivity() {
                     }
                     composable(Screen.SignIn.name) {
                         SignInScreen(
+                            navController = navController,
                            onSwitchClick = { navController.navigate(Screen.SignUp.name) }
                         )
                     }
@@ -50,6 +51,10 @@ class MainActivity : ComponentActivity() {
                             onPrivacyPolicyClick = {}
                         )
                     }
+                    composable(Screen.ExpenseCategory.name) {
+                        ExpenseCategoryScreen()
+                    }
+
                 }
             }
         }
