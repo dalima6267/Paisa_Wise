@@ -1,5 +1,4 @@
 package com.dalima.paisawise
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -24,6 +23,8 @@ import com.dalima.paisawise.ui.theme.LighterYellow
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.ui.graphics.Color
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 data class Category(
     val name: String,
@@ -32,7 +33,7 @@ data class Category(
 )
 
 @Composable
-fun ExpenseCategoryScreen() {
+fun ExpenseCategoryScreen(navController: NavController) {
     val selectedTags = remember { mutableStateListOf<String>() }
 
     // 👇 painterResource must be called inside @Composable
@@ -128,7 +129,7 @@ fun ExpenseCategoryScreen() {
 
         // Sticky Finish Button
         Button(
-            onClick = { /* Handle finish */ },
+            onClick = {navController.navigate(Screen.Main.name) },
             colors = ButtonDefaults.buttonColors(containerColor = ButtonGreen),
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier
@@ -206,5 +207,7 @@ fun CategorySectionSimple(category: Category, selectedTags: MutableList<String>)
 @Preview(showBackground = true)
 @Composable
 fun ExpenseCategoryScreenPreview() {
-    ExpenseCategoryScreen()
+    ExpenseCategoryScreen(
+        navController = rememberNavController()
+    )
 }

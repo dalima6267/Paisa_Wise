@@ -52,9 +52,11 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable(Screen.ExpenseCategory.name) {
-                        ExpenseCategoryScreen()
+                        ExpenseCategoryScreen( navController = navController)
                     }
-
+                    composable(Screen.Main.name) {
+                        MainScreen()
+                    }
                 }
             }
         }
