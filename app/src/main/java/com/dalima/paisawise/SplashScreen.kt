@@ -27,7 +27,7 @@ import com.dalima.paisawise.ui.theme.LightGreen
 @Composable
 fun SplashScreen(onTimeout: () -> Unit) {
     LaunchedEffect(Unit) {
-        delay(2000)
+        delay(3000)
         onTimeout()
     }
 

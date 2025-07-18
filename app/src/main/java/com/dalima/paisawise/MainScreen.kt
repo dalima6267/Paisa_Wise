@@ -24,7 +24,7 @@ fun MainScreen() {
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedIndex) {
                 0 -> HomeScreen()
-                1 -> ShareScreen()
+                1 -> TransactionScreen()
                 2 -> StatsScreen()
                 3 -> ProfileScreen()
                 4 -> AddScreen()
@@ -39,19 +39,10 @@ fun HomeScreen() {
 }
 
 @Composable
-fun ShareScreen() {
-    Text("Share Screen")
-}
-
-@Composable
 fun StatsScreen() {
     Text("Stats Screen")
 }
 
-@Composable
-fun ProfileScreen() {
-    Text("Profile Screen")
-}
 
 @Composable
 fun AddScreen() {

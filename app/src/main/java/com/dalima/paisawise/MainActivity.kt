@@ -4,45 +4,71 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.*
+import androidx.navigation.compose.*
 import com.dalima.paisawise.ui.theme.PaisaWiseTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             PaisaWiseTheme {
                 val navController = rememberNavController()
 
+                // ✅ MOVE inside setContent
+                var isFirstLaunch by remember { mutableStateOf(PreferenceManager.isFirstLaunch(this@MainActivity)) }
+
                 NavHost(navController = navController, startDestination = Screen.Splash.name) {
                     composable(Screen.Splash.name) {
-                        SplashScreen { navController.navigate(Screen.Welcome.name) }
+                        SplashScreen {
+                            if (isFirstLaunch) {
+                                navController.navigate(Screen.Welcome.name) {
+                                    popUpTo(Screen.Splash.name) { inclusive = true }
+                                }
+                            } else {
+                                navController.navigate(Screen.SignIn.name) {
+                                    popUpTo(Screen.Splash.name) { inclusive = true }
+                                }
+                            }
+                        }
                     }
+
                     composable(Screen.Welcome.name) {
                         WelcomeScreen(
-                            onGetStarted = { navController.navigate(Screen.Onboarding.name) },
-                            onSignIn = { navController.navigate(Screen.SignIn.name) }
+                            onGetStarted = {
+                                navController.navigate(Screen.Onboarding.name) {
+                                    popUpTo(Screen.Welcome.name) { inclusive = true }
+                                }
+                            },
+                            onSignIn = {
+                                PreferenceManager.setFirstLaunchDone(this@MainActivity)
+                                isFirstLaunch = false
+                                navController.navigate(Screen.SignIn.name) {
+                                    popUpTo(Screen.Welcome.name) { inclusive = true }
+                                }
+                            }
                         )
                     }
+
                     composable(Screen.Onboarding.name) {
-                        OnboardingScreen { navController.navigate(Screen.SignIn.name) }
+                        OnboardingScreen {
+                            PreferenceManager.setFirstLaunchDone(this@MainActivity)
+                            isFirstLaunch = false
+                            navController.navigate(Screen.SignIn.name) {
+                                popUpTo(Screen.Onboarding.name) { inclusive = true }
+                            }
+                        }
                     }
+
                     composable(Screen.SignIn.name) {
                         SignInScreen(
                             navController = navController,
-                           onSwitchClick = { navController.navigate(Screen.SignUp.name) }
+                            onSwitchClick = { navController.navigate(Screen.SignUp.name) }
                         )
                     }
+
                     composable(Screen.SignUp.name) {
                         SignUpScreen(
                             onSwitchClick = { navController.navigate(Screen.SignIn.name) },
@@ -51,13 +77,16 @@ class MainActivity : ComponentActivity() {
                             onPrivacyPolicyClick = {}
                         )
                     }
+
                     composable(Screen.ExpenseCategory.name) {
-                        ExpenseCategoryScreen( navController = navController)
+                        ExpenseCategoryScreen(navController = navController)
                     }
+
                     composable(Screen.Main.name) {
                         MainScreen()
                     }
                 }
             }
         }
-    }}
+    }
+}

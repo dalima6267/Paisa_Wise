@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "277971690805",
+    "project_id": "paisa-wise",
+    "storage_bucket": "paisa-wise.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:277971690805:android:9872d14411e479419c987c",
+        "android_client_info": {
+          "package_name": "com.dalima.paisawise"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhAqOPUIAYmTckr95PFAjg_rvrer3NTEM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
