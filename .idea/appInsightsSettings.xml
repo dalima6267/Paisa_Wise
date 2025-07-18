@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.dalima.paisawise" />
+                  <option name="mobileSdkAppId" value="1:277971690805:android:9872d14411e479419c987c" />
+                  <option name="projectId" value="paisa-wise" />
+                  <option name="projectNumber" value="277971690805" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
