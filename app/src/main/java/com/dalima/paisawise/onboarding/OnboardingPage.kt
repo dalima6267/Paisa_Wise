@@ -1,4 +1,4 @@
-package com.dalima.paisawise
+package com.dalima.paisawise.onboarding
 
 import androidx.annotation.DrawableRes
 

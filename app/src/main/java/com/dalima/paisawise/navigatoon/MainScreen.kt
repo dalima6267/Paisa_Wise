@@ -1,4 +1,4 @@
-package com.dalima.paisawise
+package com.dalima.paisawise.navigatoon
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -7,6 +7,8 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.dalima.paisawise.profileScreen.ProfileScreen
+import com.dalima.paisawise.transactionScreen.TransactionScreen
 
 @Composable
 fun MainScreen() {

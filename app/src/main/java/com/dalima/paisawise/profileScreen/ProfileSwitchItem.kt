@@ -1,4 +1,4 @@
-package com.dalima.paisawise
+package com.dalima.paisawise.profileScreen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
@@ -13,8 +13,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 import com.dalima.paisawise.ui.theme.ButtonGreen
-import com.dalima.paisawise.ui.theme.LightGreen
-import com.dalima.paisawise.ui.theme.LighterGreen
 
 @Composable
 fun ProfileSwitchItem(
