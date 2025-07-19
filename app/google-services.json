@@ -12,7 +12,20 @@
           "package_name": "com.dalima.paisawise"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "277971690805-nu7eu83rv65t3dl776e7hk3f87h278jl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dalima.paisawise",
+            "certificate_hash": "215c4abb1ccd02295ba1b52053579690c58ffea3"
+          }
+        },
+        {
+          "client_id": "277971690805-bunlct4iablhn9vdj7rvrnte7mnil0u4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDhAqOPUIAYmTckr95PFAjg_rvrer3NTEM"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "277971690805-bunlct4iablhn9vdj7rvrnte7mnil0u4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

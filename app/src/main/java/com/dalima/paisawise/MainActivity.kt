@@ -6,6 +6,15 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
 import androidx.navigation.compose.*
+import com.dalima.paisawise.Enum.Screen
+import com.dalima.paisawise.category.ExpenseCategoryScreen
+import com.dalima.paisawise.db.PreferenceManager
+import com.dalima.paisawise.navigatoon.MainScreen
+import com.dalima.paisawise.onboarding.OnboardingScreen
+import com.dalima.paisawise.signinprocess.SignInScreen
+import com.dalima.paisawise.signinprocess.SignUpScreen
+import com.dalima.paisawise.splash.SplashScreen
+import com.dalima.paisawise.splash.WelcomeScreen
 import com.dalima.paisawise.ui.theme.PaisaWiseTheme
 
 class MainActivity : ComponentActivity() {

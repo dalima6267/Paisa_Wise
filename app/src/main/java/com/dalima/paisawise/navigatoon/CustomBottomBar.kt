@@ -1,4 +1,4 @@
-package com.dalima.paisawise
+package com.dalima.paisawise.navigatoon
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

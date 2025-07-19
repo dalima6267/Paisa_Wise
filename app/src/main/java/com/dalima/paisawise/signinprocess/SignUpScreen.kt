@@ -1,6 +1,5 @@
-package com.dalima.paisawise
+package com.dalima.paisawise.signinprocess
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,8 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Button
@@ -28,24 +25,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.dalima.paisawise.R
 import com.dalima.paisawise.ui.theme.ButtonGreen
 import com.dalima.paisawise.ui.theme.LightGreen
-import com.dalima.paisawise.ui.theme.LighterGreen
 
 @Composable
-fun SignUpScreen(onSwitchClick: () -> Unit,   isChecked: Boolean,
+fun SignUpScreen(onSwitchClick: () -> Unit,
+                 isChecked: Boolean,
+                 onEmailSignUp: (String, String) -> Unit,
                  onCheckedChange: (Boolean) -> Unit,
                  onPrivacyPolicyClick: () -> Unit){
     var email by remember { mutableStateOf("") }
@@ -200,7 +196,7 @@ fun SignUpScreen(onSwitchClick: () -> Unit,   isChecked: Boolean,
                 .fillMaxWidth()
                 .padding(horizontal = 70.dp),
 
-            onClick = { /* Do nothing */ },
+            onClick = {onEmailSignUp(email, password) },
             shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = ButtonGreen,
@@ -246,14 +242,14 @@ fun SignUpScreen(onSwitchClick: () -> Unit,   isChecked: Boolean,
 
     }
 }
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun SignUpScreenPreview() {
-    SignUpScreen(
-        onSwitchClick = {},
-        isChecked = false,
-        onCheckedChange = {},
-        onPrivacyPolicyClick = {}
-    )
-}
+//@Preview(showBackground = true, showSystemUi = true)
+//@Composable
+//fun SignUpScreenPreview() {
+//    SignUpScreen(
+//        onSwitchClick = {},
+//        isChecked = false,
+//        onCheckedChange = {},
+//        onPrivacyPolicyClick = {}
+//    )
+//}
 

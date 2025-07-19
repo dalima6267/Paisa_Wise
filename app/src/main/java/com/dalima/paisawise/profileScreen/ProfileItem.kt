@@ -1,4 +1,4 @@
-package com.dalima.paisawise
+package com.dalima.paisawise.profileScreen
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.dalima.paisawise.R
 
 @Composable
 fun ProfileItem(

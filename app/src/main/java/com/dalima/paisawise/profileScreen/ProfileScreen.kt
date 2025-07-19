@@ -1,4 +1,4 @@
-package com.dalima.paisawise
+package com.dalima.paisawise.profileScreen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -12,9 +12,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.dalima.paisawise.R
 import com.dalima.paisawise.ui.theme.DarkerPuple
 
 @Composable

@@ -1,13 +1,11 @@
-package com.dalima.paisawise
+package com.dalima.paisawise.signinprocess
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.ClickableText
@@ -29,10 +27,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialogDefaults.containerColor
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.painterResource
@@ -42,10 +38,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.dalima.paisawise.R
+import com.dalima.paisawise.Enum.Screen
 import com.dalima.paisawise.ui.theme.ButtonGreen
-import com.dalima.paisawise.ui.theme.DarkGreen
 import com.dalima.paisawise.ui.theme.LightGreen
-import com.dalima.paisawise.ui.theme.LighterGreen
 
 @Composable
 fun SignInScreen(     navController: NavController,onSwitchClick: () -> Unit) {

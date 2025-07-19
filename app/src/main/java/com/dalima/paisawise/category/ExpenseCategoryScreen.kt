@@ -1,4 +1,4 @@
-package com.dalima.paisawise
+package com.dalima.paisawise.category
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -14,7 +14,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.draw.clip
 import com.dalima.paisawise.ui.theme.Black
 import com.dalima.paisawise.ui.theme.ButtonGreen
 import com.dalima.paisawise.ui.theme.DarkerYellow
@@ -25,6 +24,8 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.dalima.paisawise.Enum.Screen
+import com.dalima.paisawise.R
 
 data class Category(
     val name: String,
