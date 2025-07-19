@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
 import com.dalima.paisawise.Enum.Screen
 import com.dalima.paisawise.category.ExpenseCategoryScreen
@@ -16,6 +17,7 @@ import com.dalima.paisawise.signinprocess.SignUpScreen
 import com.dalima.paisawise.splash.SplashScreen
 import com.dalima.paisawise.splash.WelcomeScreen
 import com.dalima.paisawise.ui.theme.PaisaWiseTheme
+import com.dalima.paisawise.viewmodel.AuthViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,10 +27,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             PaisaWiseTheme {
                 val navController = rememberNavController()
-
+                val viewModel: AuthViewModel = viewModel()
                 // ✅ MOVE inside setContent
                 var isFirstLaunch by remember { mutableStateOf(PreferenceManager.isFirstLaunch(this@MainActivity)) }
-
+                var isChecked by remember { mutableStateOf(false) }
                 NavHost(navController = navController, startDestination = Screen.Splash.name) {
                     composable(Screen.Splash.name) {
                         SplashScreen {
@@ -74,16 +76,19 @@ class MainActivity : ComponentActivity() {
                     composable(Screen.SignIn.name) {
                         SignInScreen(
                             navController = navController,
-                            onSwitchClick = { navController.navigate(Screen.SignUp.name) }
+                            onSwitchClick = { navController.navigate(Screen.SignUp.name) },
+                            viewModel = viewModel
                         )
                     }
 
                     composable(Screen.SignUp.name) {
                         SignUpScreen(
+                            navController = navController,
                             onSwitchClick = { navController.navigate(Screen.SignIn.name) },
-                            isChecked = false,
-                            onCheckedChange = {},
-                            onPrivacyPolicyClick = {}
+                            isChecked = isChecked,
+                            onCheckedChange = { isChecked = it },
+                            onPrivacyPolicyClick = {},
+                            viewModel = viewModel
                         )
                     }
 
