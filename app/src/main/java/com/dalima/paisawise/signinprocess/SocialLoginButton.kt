@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.dalima.paisawise.ui.theme.Green20
 
 @Composable
-fun SocialLoginButton(iconRes: Int){
+fun SocialLoginButton(iconRes: Int, function: () -> Unit){
     Box(
         modifier = Modifier
             .size(width = 70.dp, height = 35.dp)
