@@ -7,11 +7,19 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import com.dalima.paisawise.HomeScreen
+import com.dalima.paisawise.db.AppDatabase
 import com.dalima.paisawise.profileScreen.ProfileScreen
 import com.dalima.paisawise.transactionScreen.TransactionScreen
 
 @Composable
 fun MainScreen() {
+
+    val context = LocalContext.current
+    val expenseDao = remember {
+        AppDatabase.getDatabase(context).expenseDao()
+    }
     var selectedIndex by remember { mutableStateOf(0) }
 
     Scaffold(
@@ -25,7 +33,7 @@ fun MainScreen() {
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedIndex) {
-                0 -> HomeScreen()
+                0 -> HomeScreen(expenseDao = expenseDao)
                 1 -> TransactionScreen()
                 2 -> StatsScreen()
                 3 -> ProfileScreen()
@@ -33,11 +41,6 @@ fun MainScreen() {
             }
         }
     }
-}
-
-@Composable
-fun HomeScreen() {
-    Text("Home Screen")
 }
 
 @Composable

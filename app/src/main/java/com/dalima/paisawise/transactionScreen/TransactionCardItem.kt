@@ -34,7 +34,8 @@ fun TransactionCardItem(
     date: String,
     subcategory: String,
     amount: String,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    backgroundColor: Color
 ) {
 
 
@@ -46,14 +47,13 @@ fun TransactionCardItem(
         elevation = CardDefaults.cardElevation(6.dp),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
-            containerColor = White40 // or any other color
+            containerColor = backgroundColor
         )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
-                .background(White40),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -64,6 +64,7 @@ fun TransactionCardItem(
                     modifier = Modifier
                         .size(40.dp)
                         .padding(end = 12.dp)
+                        .background(White40)
                     .clip(CircleShape)
                     .border(2.dp, Color.Black, CircleShape),
                     tint = Color.Unspecified // keeps original icon color
@@ -106,3 +107,11 @@ fun TransactionCardItem(
         }
     }
 }
+val cardColors = listOf(
+    Color(0xFFE3F2FD), // Light Blue
+    Color(0xFFFFF9C4), // Light Yellow
+    Color(0xFFFFE0B2), // Light Orange
+    Color(0xFFE1BEE7), // Light Purple
+    Color(0xFFC8E6C9), // Light Green
+    Color(0xFFFFCDD2)  // Light Red
+)
