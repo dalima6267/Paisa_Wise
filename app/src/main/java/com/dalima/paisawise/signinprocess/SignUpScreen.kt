@@ -25,6 +25,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +43,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Observer
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -81,16 +83,26 @@ fun SignUpScreen(    onSwitchClick: () -> Unit,
         }
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.authStatus.observe(lifecycleOwner) { result ->
+    DisposableEffect(lifecycleOwner) {
+        val observer = Observer<Result<Unit>> { result ->
             result?.let {
                 if (it.isSuccess) {
                     navController.navigate(Screen.ExpenseCategory.name)
                 } else {
-                    Toast.makeText(context, it.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        context,
+                        it.exceptionOrNull()?.message ?: "Error",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
                 viewModel.clearStatus()
             }
+        }
+
+        viewModel.authStatus.observe(lifecycleOwner, observer as Observer<in Result<Unit>?>)
+
+        onDispose {
+            viewModel.authStatus.removeObserver(observer as Observer<in Result<Unit>?>)
         }
     }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
