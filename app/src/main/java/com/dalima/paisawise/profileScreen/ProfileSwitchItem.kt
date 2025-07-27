@@ -30,7 +30,7 @@ fun ProfileSwitchItem(
         Icon(
             painter = painterResource(id = icon),
             contentDescription = null,
-            modifier = Modifier.size(18.dp).padding(end=16.dp),
+            modifier = Modifier.size(34.dp).padding(end=16.dp),
             tint = Color.Black
         )
         Spacer(modifier = Modifier.width(16.dp))

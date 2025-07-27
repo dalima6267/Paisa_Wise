@@ -115,5 +115,7 @@ dependencies {
     // Lifecycles only (without ViewModel or LiveData)
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version")
 //    implementation("androidx.compose.runtime:runtime-livedata:$lifecycle_version")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0") // Core charting library
+    implementation("androidx.compose.ui:ui:1.6.0")
 
 }
