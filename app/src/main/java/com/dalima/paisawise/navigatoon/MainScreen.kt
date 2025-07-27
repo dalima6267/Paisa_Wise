@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.dalima.paisawise.AnalysisScreen
 import com.dalima.paisawise.HomeScreen
 import com.dalima.paisawise.db.AppDatabase
 import com.dalima.paisawise.profileScreen.ProfileScreen
@@ -35,19 +36,23 @@ fun MainScreen() {
             when (selectedIndex) {
                 0 -> HomeScreen(expenseDao = expenseDao)
                 1 -> TransactionScreen()
-                2 -> StatsScreen()
+                2 ->  AnalysisScreen(
+                    analysisSummary = "This month you spent the most on Food. Consider reducing it next month.",
+                    expensesByType = mapOf(
+                        "Food" to 5000f,
+                        "Travel" to 2500f,
+                        "Shopping" to 3500f,
+                        "Bills" to 1200f
+                    ),
+                    onDownloadClick = { /* TODO */ },
+                    onPdfGenerateClick = { /* TODO */ }
+                )
                 3 -> ProfileScreen()
                 4 -> AddScreen()
             }
         }
     }
 }
-
-@Composable
-fun StatsScreen() {
-    Text("Stats Screen")
-}
-
 
 @Composable
 fun AddScreen() {
