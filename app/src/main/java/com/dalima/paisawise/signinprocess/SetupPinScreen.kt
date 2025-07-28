@@ -1,5 +1,6 @@
 package com.dalima.paisawise.signinprocess
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -36,13 +37,18 @@ import androidx.compose.ui.tooling.preview.Preview
 
 import com.dalima.paisawise.ui.theme.LightGreen
 import androidx.compose.material3.Icon
+import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.dalima.paisawise.Enum.Screen
+import com.dalima.paisawise.PinStorage
 
 
 @Composable
-fun SetupPinScreen() {
+fun SetupPinScreen(navController: NavController) {
     val pinLength = 4
     var pin by remember { mutableStateOf("") }
-
+    val context = LocalContext.current
     val numbers = listOf(
         "1", "2", "3",
         "4", "5", "6",
@@ -117,10 +123,24 @@ fun SetupPinScreen() {
                     when (label) {
                         "" -> {
                             if (index == numbers.lastIndex) {
-                                // Show FAB at last position
                                 FloatingActionButton(
                                     onClick = {
-                                        // Handle click
+                                        if (pin.length == pinLength) {
+                                            val savedPin = PinStorage.getSavedPin(context)
+                                            if (savedPin == null) {
+                                                // First-time setup: Save PIN
+                                                PinStorage.savePin(context, pin)
+                                                // Navigate to next screen
+                                                navController.navigate(Screen.ExpenseCategory.name)
+                                            } else {
+                                                // Validate entered PIN
+                                                if (pin == savedPin) {
+                                                    navController.navigate(Screen.ExpenseCategory.name)
+                                                } else {
+                                                    Toast.makeText(context, "Incorrect PIN", Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        }
                                     },
                                     backgroundColor = Color(0xFFA7FFEB),
                                     contentColor = Color.Black,
@@ -173,5 +193,12 @@ fun SetupPinScreen() {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun SetupPinScreenPreview() {
-    SetupPinScreen()
+    SetupPinScreen(
+        navController = rememberNavController()
+    )
 }
+//val startDestination = if (PinStorage.hasPin(context)) {
+//    Screen.SetupPin.name // PIN check screen
+//} else {
+//    Screen.SetupPin.name // same screen, but saving logic will run
+//}
