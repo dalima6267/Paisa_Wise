@@ -117,5 +117,6 @@ dependencies {
 //    implementation("androidx.compose.runtime:runtime-livedata:$lifecycle_version")
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0") // Core charting library
     implementation("androidx.compose.ui:ui:1.6.0")
-
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
 }

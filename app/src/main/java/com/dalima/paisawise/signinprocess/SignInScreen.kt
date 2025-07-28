@@ -53,6 +53,7 @@ import com.dalima.paisawise.viewmodel.AuthViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 
 @Composable
@@ -74,6 +75,14 @@ fun SignInScreen(
             viewModel.signInWithGoogle(credential)
         } catch (e: ApiException) {
             Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
+        }
+    }
+    LaunchedEffect(Unit) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            navController.navigate(Screen.ExpenseCategory.name) {
+                popUpTo(0) { inclusive = true } // optional: clears back stack
+            }
         }
     }
     LaunchedEffect(Unit) {
