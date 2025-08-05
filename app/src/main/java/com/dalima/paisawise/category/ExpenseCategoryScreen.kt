@@ -21,11 +21,14 @@ import com.dalima.paisawise.ui.theme.LightDarkGreen
 import com.dalima.paisawise.ui.theme.LighterYellow
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dalima.paisawise.Enum.Screen
 import com.dalima.paisawise.R
+import com.dalima.paisawise.viewmodel.CategoryViewModel
 
 data class Category(
     val name: String,
@@ -34,10 +37,10 @@ data class Category(
 )
 
 @Composable
-fun ExpenseCategoryScreen(navController: NavController) {
-    val selectedTags = remember { mutableStateListOf<String>() }
+fun ExpenseCategoryScreen(navController: NavController,
+                          viewModel: CategoryViewModel = viewModel()) {
+    val selectedTags = viewModel.selectedTags.collectAsState(emptyList())
 
-    // 👇 painterResource must be called inside @Composable
     val categories = listOf(
         Category(
             "Essentials & Living",
@@ -107,7 +110,6 @@ fun ExpenseCategoryScreen(navController: NavController) {
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Scrollable content
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -124,7 +126,11 @@ fun ExpenseCategoryScreen(navController: NavController) {
             )
 
             categories.forEach { category ->
-                CategorySectionSimple(category, selectedTags)
+                CategorySectionSimple(
+                    category = category,
+                    selectedTags = selectedTags.value,
+                    onTagToggle = viewModel::toggleTag
+                )
             }
         }
 
@@ -146,9 +152,12 @@ fun ExpenseCategoryScreen(navController: NavController) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun CategorySectionSimple(category: Category, selectedTags: MutableList<String>) {
+fun CategorySectionSimple(
+    category: Category,
+    selectedTags: List<String>,
+    onTagToggle: (String) -> Unit
+) {
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-        // Title with icon and rounded background
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -180,10 +189,7 @@ fun CategorySectionSimple(category: Category, selectedTags: MutableList<String>)
 
                 FilterChip(
                     selected = isSelected,
-                    onClick = {
-                        if (isSelected) selectedTags.remove(tag)
-                        else selectedTags.add(tag)
-                    },
+                    onClick = { onTagToggle(tag) },
                     label = {
                         Text(tag, color = Black, fontWeight = FontWeight.Bold)
                     },
@@ -204,6 +210,7 @@ fun CategorySectionSimple(category: Category, selectedTags: MutableList<String>)
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

@@ -7,6 +7,7 @@ import androidx.security.crypto.MasterKey
 object PinStorage {
     private const val PREF_NAME = "secure_pin_prefs"
     private const val PIN_KEY = "user_pin"
+    private const val TAGS_KEY = "selected_tags"
 
     private fun getSharedPrefs(context: Context) =
         EncryptedSharedPreferences.create(
@@ -30,5 +31,18 @@ object PinStorage {
 
     fun hasPin(context: Context): Boolean {
         return getSavedPin(context) != null
+    }
+    //Tag method
+    fun saveSelectedTags(context: Context, tags: List<String>) {
+        val prefs=getSharedPrefs(context)
+        prefs.edit().putStringSet(TAGS_KEY, tags.toSet()).apply()
+    }
+    fun getSelectedTags(context: Context): List<String> {
+        val prefs=getSharedPrefs(context)
+        return prefs.getStringSet(TAGS_KEY, emptySet())?.toList() ?: emptyList()
+    }
+    fun clearSelectedTags(context: Context) {
+        val prefs=getSharedPrefs(context)
+        prefs.edit().remove(TAGS_KEY).apply()
     }
 }

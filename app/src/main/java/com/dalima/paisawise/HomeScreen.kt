@@ -1,7 +1,9 @@
 package com.dalima.paisawise
 
+import android.R.attr.category
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,7 +11,6 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,67 +23,88 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.dalima.paisawise.data.ExpenseDao
 import com.dalima.paisawise.db.HomeUIState
 import com.dalima.paisawise.ui.theme.ButtonGreen
 import com.dalima.paisawise.ui.theme.Gray
-import com.dalima.paisawise.ui.theme.Green20
 import com.dalima.paisawise.ui.theme.Lavender
-import com.dalima.paisawise.ui.theme.LightGreen
-import com.dalima.paisawise.ui.theme.LighterGreen
 import com.dalima.paisawise.ui.theme.White40
 import com.dalima.paisawise.viewmodel.HomeViewModel
 import com.dalima.paisawise.viewmodel.HomeViewModelFactory
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.navigation.NavController
+import com.dalima.paisawise.data.Expense
 import com.dalima.paisawise.ui.theme.Cardgreen
+import com.dalima.paisawise.viewmodel.CategoryViewModel
 
 
 @Composable
-fun HomeScreen(expenseDao: ExpenseDao) {
-    val viewModel: HomeViewModel = viewModel(
+fun HomeScreen(navController: NavController, expenseDao: ExpenseDao) {
+    val homeViewModel: HomeViewModel = viewModel(
         factory = HomeViewModelFactory(expenseDao)
     )
+    val categoryViewModel: CategoryViewModel = viewModel()
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
     // Create a local state to store the UI state
-    var uiState by remember { mutableStateOf<HomeUIState>(HomeUIState.NoExpenses) }
+    var showDialog by remember{mutableStateOf(false)}
+    val transactions by homeViewModel.allExpenses.observeAsState(emptyList())
 
     // Manually observe LiveData
-    LaunchedEffect(Unit) {
-        viewModel.uiState.observe(lifecycleOwner) {
-            uiState = it
-        }
-    }
+    val uiState by homeViewModel.uiState.observeAsState(HomeUIState.NoExpenses)
 
+
+    val categories by categoryViewModel.selectedTags.collectAsState()
     Column(modifier = Modifier.fillMaxSize()) {
 
         when (uiState) {
             is HomeUIState.NoExpenses -> {
-                NoExpenseLayout()
+                NoExpenseLayout( onAddClick = {showDialog=true})
             }
             is HomeUIState.HasExpenses -> {
                 val state = uiState as HomeUIState.HasExpenses
                 ExpenseLayout(
+                    navController = navController,
+                    onAddClick = {showDialog=true},
                     totalAmount = state.totalAmount,
-                    comparison = state.comparisonText
+                    comparison = state.comparisonText,
+                    transactions = transactions
                 )
             }
         }
-
-        BottomAppBar {
-            // Add bottom bar actions if needed
+        if(showDialog){
+            AddExpenseDialog(
+                categories=categories,
+                onDismiss={showDialog=false},
+                onSave={
+                    category, title, amount->
+                    homeViewModel.addExpense(
+                        Expense(
+                            category = category,
+                            title = title,
+                            amount = amount.toDoubleOrNull() ?: 0.0,
+                            date = "2025-08-03"
+                        )
+                    )
+                    showDialog=false
+                }
+            )
         }
     }
 }
 
 
 @Composable
-fun NoExpenseLayout() {
+fun NoExpenseLayout(onAddClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -102,7 +124,7 @@ fun NoExpenseLayout() {
             color = Color.Black)
         Spacer(modifier = Modifier.height(28.dp))
         Button(
-            onClick = { /* Navigate to Add Expense */ },
+            onClick = onAddClick,
             colors = ButtonDefaults.buttonColors(backgroundColor = ButtonGreen)) {
             Text(text = "Add a new expense",
                 color = Color.White,
@@ -113,21 +135,15 @@ fun NoExpenseLayout() {
 }
 
 @Composable
-fun ExpenseLayout(totalAmount: Double, comparison: String) {
-    val sampleTransactions = listOf(
-        TransactionItem("Food", "Lunch at restaurant", 250.0),
-        TransactionItem("Transport", "Uber ride", 150.0),
-        TransactionItem("Entertainment", "Movie ticket", 300.0),
-        TransactionItem("Shopping", "T-shirt from mall", 999.0),
-        TransactionItem("Subscription", "Spotify Premium", 129.0)
-    )
+fun ExpenseLayout(navController: NavController,onAddClick: () -> Unit,totalAmount: Double, comparison: String,transactions: List<Expense>
+) {
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp).background(White40)
+        .padding(10.dp).background(White40)
     ) {
-        Spacer(modifier = Modifier.height(58.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -151,7 +167,7 @@ fun ExpenseLayout(totalAmount: Double, comparison: String) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("Highest type: Food", fontSize = 16.sp)
                 }
-Spacer(modifier = Modifier.width(30.dp))
+                Spacer(modifier = Modifier.width(30.dp))
                 Image(
                     painter = painterResource(id = R.drawable.monthlyexpense), // Replace with your drawable
                     contentDescription = "Expense Icon",
@@ -161,18 +177,20 @@ Spacer(modifier = Modifier.width(30.dp))
                 )
             }
         }
-
-
         Spacer(modifier = Modifier.height(20.dp))
 
         Text("Quick Links", fontWeight = FontWeight.SemiBold)
         Spacer(modifier = Modifier.height(20.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // Wrap each card in a Box with equal weight
             OutlinedButton(
                 onClick = { /* Transaction */ },
                 modifier = Modifier
-                    .width(170.dp)
+                    .weight(1f)
                     .height(100.dp),
                 colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Gray),
                 shape = RoundedCornerShape(16.dp)
@@ -185,7 +203,7 @@ Spacer(modifier = Modifier.width(30.dp))
             OutlinedButton(
                 onClick = { /* Analysis */ },
                 modifier = Modifier
-                    .width(170.dp)
+                    .weight(1f)
                     .height(100.dp),
                 colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Gray),
                 shape = RoundedCornerShape(16.dp)
@@ -206,24 +224,49 @@ Spacer(modifier = Modifier.width(30.dp))
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f), // take remaining space
+                .weight(1f),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(sampleTransactions) { transaction ->
+            // ✅ Only show two transaction items
+            items(transactions.take(3)) { transaction ->
                 TransactionItemCard(transaction)
             }
         }
+
+        Spacer(modifier = Modifier.height(5.dp))
+        Text(
+            text = "Show More....",
+            modifier = Modifier
+                .align(Alignment.End)
+                .clickable {
+                    // Navigate to another fragment
+                    navController.navigate("TransactionScreen")
+                },
+            color = Color.Blue,
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+        Button(
+            onClick = onAddClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(40.dp),
+            colors = ButtonDefaults.buttonColors(backgroundColor = ButtonGreen)
+        ) {
+            Text(
+                text = "Add a new expense",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+        }
+        Spacer(modifier = Modifier.height(10.dp))
     }
 }
-
-
-data class TransactionItem(
-    val category: String,
-    val description: String,
-    val amount: Double
-)
 @Composable
-fun TransactionItemCard(transaction: TransactionItem) {
+fun TransactionItemCard(expense: Expense) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -241,20 +284,20 @@ fun TransactionItemCard(transaction: TransactionItem) {
         ) {
             Column {
                 Text(
-                    text = transaction.category,
+                    text = expense.category,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = Color.Black
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = transaction.description,
+                    text = expense.title,
                     fontSize = 14.sp,
                     color = Color.DarkGray
                 )
             }
             Text(
-                text = "₹${transaction.amount}",
+                text = "₹${expense.amount}",
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
                 color = Color.Black
@@ -262,9 +305,85 @@ fun TransactionItemCard(transaction: TransactionItem) {
         }
     }
 }
-
-@Preview(showBackground = true)
 @Composable
-fun ExpenseLayout(){
-    ExpenseLayout(totalAmount = 1000.0, comparison = "200 more than last month")
+fun AddExpenseDialog(
+    categories: List<String>,
+    onDismiss: () -> Unit,
+    onSave: (category: String, title: String, amount: String) -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf("") }
+    var expanded by remember { mutableStateOf(false) }
+    var selectedCategory by remember { mutableStateOf(categories.firstOrNull() ?: "") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add Expense") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Title/Description") }
+                )
+                OutlinedTextField(
+                    value = amount,
+                    onValueChange = { amount = it },
+                    label = { Text("Amount") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+                Box {
+                    OutlinedTextField(
+                        value = selectedCategory,
+                        onValueChange = {},
+                        label = { Text("Category") },
+                        readOnly = true,
+                        trailingIcon = {
+                            IconButton(onClick = { expanded = true }) {
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                            }
+                        }
+                    )
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        categories.forEach { cat ->
+                            DropdownMenuItem(onClick = {
+                                selectedCategory = cat
+                                expanded = false
+                            }) {
+                                Text(cat)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onSave(selectedCategory, title, amount)
+            }) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
+
+//
+//@Preview(showBackground = true, showSystemUi = true)
+//@Composable
+//fun ExpenseLayoutPreview() {
+//    ExpenseLayout(
+//        onAddClick = {},
+//        totalAmount = 12345.67,
+//        comparison = "5% more than June"
+//
+//    )
+//}
+

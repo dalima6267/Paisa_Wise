@@ -28,7 +28,6 @@ class MainActivity : ComponentActivity() {
             PaisaWiseTheme {
                 val navController = rememberNavController()
                 val viewModel: AuthViewModel = viewModel()
-                // ✅ MOVE inside setContent
                 var isFirstLaunch by remember { mutableStateOf(PreferenceManager.isFirstLaunch(this@MainActivity)) }
                 var isChecked by remember { mutableStateOf(false) }
                 NavHost(navController = navController, startDestination = Screen.Splash.name) {
