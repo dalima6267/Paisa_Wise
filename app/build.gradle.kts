@@ -96,7 +96,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-database")
-
+    implementation("androidx.compose.runtime:runtime-livedata")
     //room database
     val room_version = "2.7.2"
 

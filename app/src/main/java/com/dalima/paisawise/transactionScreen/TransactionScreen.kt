@@ -33,7 +33,7 @@ fun TransactionScreen() {
         )
     }
     Column(modifier = Modifier.fillMaxSize()) {
-        Spacer(modifier = Modifier.height(58.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             itemsIndexed(transactions) { index, transaction ->
                 TransactionCardItem(

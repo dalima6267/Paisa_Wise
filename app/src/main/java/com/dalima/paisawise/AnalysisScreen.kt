@@ -32,7 +32,7 @@ fun AnalysisScreen(
                 .padding(16.dp)
                 .fillMaxSize()
         ) {
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text("Expense Analysis Chart", fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
