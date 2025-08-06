@@ -1,11 +1,6 @@
 package com.dalima.paisawise.navigatoon
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -15,7 +10,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -65,7 +59,31 @@ fun MainScreen(
             bottomBar = {
                 CustomBottomBar(
                     selectedIndex = selectedIndex,
-                    onItemSelected = { selectedIndex = it }
+                    onItemSelected = { index ->
+                        selectedIndex = index
+                        when (index) {
+                            0 -> navController.navigate("HomeScreen") {
+                                popUpTo("HomeScreen") { inclusive = true }
+                                launchSingleTop = true
+                            }
+                            1 -> navController.navigate("TransactionScreen") {
+                                popUpTo("HomeScreen")
+                                launchSingleTop = true
+                            }
+                            2 -> navController.navigate("AnalysisScreen") {
+                                popUpTo("HomeScreen")
+                                launchSingleTop = true
+                            }
+                            3 -> navController.navigate("ProfileScreen") {
+                                popUpTo("HomeScreen")
+                                launchSingleTop = true
+                            }
+                            4 -> navController.navigate("AddScreen") {
+                                popUpTo("HomeScreen")
+                                launchSingleTop = true
+                            }
+                        }
+                    }
                 )
             },
             backgroundColor = Color(0xFFF8FAFC)
@@ -79,7 +97,7 @@ fun MainScreen(
                         HomeScreen(navController = navController, expenseDao = expenseDao)
                     }
                     composable("TransactionScreen") {
-                        TransactionScreen()
+                        TransactionScreen(navController = navController, expenseDao = expenseDao)
                     }
                     composable("AnalysisScreen") {
                         AnalysisScreen(
@@ -105,8 +123,6 @@ fun MainScreen(
         }
     }
 }
-
-
 
 @Composable
 fun AddScreen() {
