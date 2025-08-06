@@ -59,11 +59,9 @@ fun CustomBottomBar(
                 .offset(y = (-15).dp)
                 .background(Color.White, shape = CircleShape)
         )
-
-        // Floating Action Button with custom image
         FloatingActionButton(
             onClick = { onItemSelected(4) },
-            backgroundColor = Color.Transparent, // Transparent to only show image
+            backgroundColor = Color.Transparent,
             elevation = FloatingActionButtonDefaults.elevation(6.dp),
             modifier = Modifier
                 .size(60.dp)

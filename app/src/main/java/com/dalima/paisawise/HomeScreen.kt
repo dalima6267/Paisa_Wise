@@ -40,13 +40,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.dalima.paisawise.data.Expense
 import com.dalima.paisawise.ui.theme.Cardgreen
 import com.dalima.paisawise.viewmodel.CategoryViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 @Composable
-fun HomeScreen(navController: NavController, expenseDao: ExpenseDao) {
+fun HomeScreen(navController: NavHostController, expenseDao: ExpenseDao) {
     val homeViewModel: HomeViewModel = viewModel(
         factory = HomeViewModelFactory(expenseDao)
     )
@@ -77,6 +81,8 @@ fun HomeScreen(navController: NavController, expenseDao: ExpenseDao) {
                     onAddClick = {showDialog=true},
                     totalAmount = state.totalAmount,
                     comparison = state.comparisonText,
+                    highestCategory = state.highestCategory,
+                    currentMonth = state.currentMonthName,
                     transactions = transactions
                 )
             }
@@ -86,13 +92,13 @@ fun HomeScreen(navController: NavController, expenseDao: ExpenseDao) {
                 categories=categories,
                 onDismiss={showDialog=false},
                 onSave={
-                    category, title, amount->
+                    category, title, amount, date ->
                     homeViewModel.addExpense(
                         Expense(
                             category = category,
                             title = title,
                             amount = amount.toDoubleOrNull() ?: 0.0,
-                            date = "2025-08-03"
+                            date = date
                         )
                     )
                     showDialog=false
@@ -135,7 +141,8 @@ fun NoExpenseLayout(onAddClick: () -> Unit) {
 }
 
 @Composable
-fun ExpenseLayout(navController: NavController,onAddClick: () -> Unit,totalAmount: Double, comparison: String,transactions: List<Expense>
+fun ExpenseLayout(navController: NavController,onAddClick: () -> Unit,totalAmount: Double, comparison: String,highestCategory: String,
+                  currentMonth: String,transactions: List<Expense>
 ) {
 
     Column(
@@ -159,13 +166,13 @@ fun ExpenseLayout(navController: NavController,onAddClick: () -> Unit,totalAmoun
 
 
                 Column {
-                    Text("Total expense for July", fontWeight = FontWeight.Bold, fontSize = 26.sp)
+                    Text("Total expense for $currentMonth", fontWeight = FontWeight.Bold, fontSize = 26.sp)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("\u20B9$totalAmount", fontSize = 16.sp)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(comparison, fontSize = 16.sp)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("Highest type: Food", fontSize = 16.sp)
+                    Text("Highest type: $highestCategory", fontSize = 16.sp)
                 }
                 Spacer(modifier = Modifier.width(30.dp))
                 Image(
@@ -186,7 +193,6 @@ fun ExpenseLayout(navController: NavController,onAddClick: () -> Unit,totalAmoun
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Wrap each card in a Box with equal weight
             OutlinedButton(
                 onClick = { /* Transaction */ },
                 modifier = Modifier
@@ -309,13 +315,17 @@ fun TransactionItemCard(expense: Expense) {
 fun AddExpenseDialog(
     categories: List<String>,
     onDismiss: () -> Unit,
-    onSave: (category: String, title: String, amount: String) -> Unit
+    onSave: (category: String, title: String, amount: String, date:String) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf(categories.firstOrNull() ?: "") }
 
+    val currentDate=remember{
+        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        formatter.format(Date())
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add Expense") },
@@ -358,11 +368,18 @@ fun AddExpenseDialog(
                         }
                     }
                 }
+                // Show the current date as read-only
+                OutlinedTextField(
+                    value = currentDate,
+                    onValueChange = {},
+                    label = { Text("Date") },
+                    readOnly = true
+                )
             }
         },
         confirmButton = {
             TextButton(onClick = {
-                onSave(selectedCategory, title, amount)
+                onSave(selectedCategory, title, amount,currentDate)
             }) {
                 Text("Save")
             }
@@ -375,15 +392,4 @@ fun AddExpenseDialog(
     )
 }
 
-//
-//@Preview(showBackground = true, showSystemUi = true)
-//@Composable
-//fun ExpenseLayoutPreview() {
-//    ExpenseLayout(
-//        onAddClick = {},
-//        totalAmount = 12345.67,
-//        comparison = "5% more than June"
-//
-//    )
-//}
 

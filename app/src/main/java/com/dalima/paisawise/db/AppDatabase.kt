@@ -30,5 +30,10 @@ companion object{
 
 sealed class HomeUIState {
     object NoExpenses : HomeUIState()
-    data class HasExpenses(val totalAmount: Double, val comparisonText: String) : HomeUIState()
+    data class HasExpenses(
+        val totalAmount: Double,
+        val comparisonText: String,
+        val highestCategory: String,
+        val currentMonthName: String // <- NEW
+    ) : HomeUIState()
 }

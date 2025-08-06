@@ -2,19 +2,10 @@ package com.dalima.paisawise.transactionScreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,30 +16,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dalima.paisawise.R
+import com.dalima.paisawise.data.Expense
 import com.dalima.paisawise.ui.theme.White40
 
 @Composable
 fun TransactionCardItem(
-    icon: Int,
-    category: String,
-    date: String,
-    subcategory: String,
-    amount: String,
+    expense: Expense,
     onDelete: () -> Unit,
     backgroundColor: Color
 ) {
-
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            ,
-        elevation = CardDefaults.cardElevation(6.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor
-        )
+        elevation = 6.dp,
+        backgroundColor = backgroundColor
     ) {
         Row(
             modifier = Modifier
@@ -59,31 +42,31 @@ fun TransactionCardItem(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    painter = painterResource(id = icon),
+                    painter = painterResource(id = android.R.drawable.ic_menu_info_details),
                     contentDescription = "Category Icon",
                     modifier = Modifier
                         .size(40.dp)
                         .padding(end = 12.dp)
-                        .background(White40)
-                    .clip(CircleShape)
-                    .border(2.dp, Color.Black, CircleShape),
-                    tint = Color.Unspecified // keeps original icon color
+                        .background(White40, shape = CircleShape)
+                        .clip(CircleShape)
+                        .border(2.dp, Color.Black, CircleShape),
+                    tint = Color.Unspecified
                 )
 
                 Column {
                     Text(
-                        text = date,
+                        text = expense.date,
                         fontSize = 12.sp,
                         color = Color.Black
                     )
                     Text(
-                        text = category,
+                        text = expense.category,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         color = Color.Black
                     )
                     Text(
-                        text = subcategory,
+                        text = expense.title,
                         color = Color.Gray,
                         fontSize = 12.sp
                     )
@@ -91,7 +74,7 @@ fun TransactionCardItem(
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = amount,
+                    text = "₹${expense.amount}",
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = Color.Black
@@ -100,13 +83,15 @@ fun TransactionCardItem(
                     Icon(
                         painter = painterResource(id = R.drawable.delete),
                         contentDescription = "Delete",
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
         }
     }
 }
+
+// Card color palette
 val cardColors = listOf(
     Color(0xFFE3F2FD), // Light Blue
     Color(0xFFFFF9C4), // Light Yellow
