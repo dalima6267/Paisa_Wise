@@ -19,6 +19,23 @@ class HomeViewModel(private val expenseDao: ExpenseDao) : ViewModel() {
             calculateMonthlyExpenseState(expenses)
         }
     }
+    val expensesByCategory: LiveData<Map<String, Float>> = allExpenses.map { expenses ->
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val monthFormat = SimpleDateFormat("MM-yyyy", Locale.getDefault())
+        val currentMonthKey = monthFormat.format(Date())
+
+        val currentMonthExpenses = expenses.filter {
+            try {
+                val parsedDate = sdf.parse(it.date)
+                parsedDate != null && monthFormat.format(parsedDate) == currentMonthKey
+            } catch (e: Exception) {
+                false
+            }
+        }
+
+        currentMonthExpenses.groupBy { it.category }
+            .mapValues { it.value.sumOf { expense -> expense.amount }.toFloat() }
+    }
 
     private fun calculateMonthlyExpenseState(expenses: List<Expense>): HomeUIState.HasExpenses {
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -77,6 +94,7 @@ class HomeViewModel(private val expenseDao: ExpenseDao) : ViewModel() {
         )
 
     }
+
 
     fun addExpense(expense: Expense) {
         viewModelScope.launch {
