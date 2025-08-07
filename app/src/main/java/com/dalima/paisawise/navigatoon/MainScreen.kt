@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.dalima.paisawise.AnalysisScreen
+import com.dalima.paisawise.AnalysisScreenRoute
 import com.dalima.paisawise.HomeScreen
 import com.dalima.paisawise.db.AppDatabase
 import com.dalima.paisawise.profileScreen.ProfileScreen
@@ -100,17 +101,7 @@ fun MainScreen(
                         TransactionScreen(navController = navController, expenseDao = expenseDao)
                     }
                     composable("AnalysisScreen") {
-                        AnalysisScreen(
-                            analysisSummary = "This month you spent the most on Food. Consider reducing it next month.",
-                            expensesByType = mapOf(
-                                "Food" to 5000f,
-                                "Travel" to 2500f,
-                                "Shopping" to 3500f,
-                                "Bills" to 1200f
-                            ),
-                            onDownloadClick = { /* TODO */ },
-                            onPdfGenerateClick = { /* TODO */ }
-                        )
+                        AnalysisScreenRoute(expenseDao = expenseDao)
                     }
                     composable("ProfileScreen") {
                         ProfileScreen()

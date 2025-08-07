@@ -13,7 +13,6 @@ import com.dalima.paisawise.data.ExpenseDao
 import com.dalima.paisawise.viewmodel.HomeViewModel
 import com.dalima.paisawise.viewmodel.HomeViewModelFactory
 import androidx.compose.runtime.getValue
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 
 @Composable
