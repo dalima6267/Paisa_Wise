@@ -21,7 +21,6 @@ import com.dalima.paisawise.ui.theme.LightDarkGreen
 import com.dalima.paisawise.ui.theme.LighterYellow
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController

@@ -12,6 +12,7 @@ import com.dalima.paisawise.category.ExpenseCategoryScreen
 import com.dalima.paisawise.db.PreferenceManager
 import com.dalima.paisawise.navigatoon.MainScreen
 import com.dalima.paisawise.onboarding.OnboardingScreen
+import com.dalima.paisawise.signinprocess.SetupPinScreen
 import com.dalima.paisawise.signinprocess.SignInScreen
 import com.dalima.paisawise.signinprocess.SignUpScreen
 import com.dalima.paisawise.splash.SplashScreen
@@ -28,9 +29,17 @@ class MainActivity : ComponentActivity() {
             PaisaWiseTheme {
                 val navController = rememberNavController()
                 val viewModel: AuthViewModel = viewModel()
+
                 var isFirstLaunch by remember { mutableStateOf(PreferenceManager.isFirstLaunch(this@MainActivity)) }
                 var isChecked by remember { mutableStateOf(false) }
+                val savedPin = remember { mutableStateOf<String?>(null) }
+
+                LaunchedEffect(Unit) {
+                    savedPin.value = PinStorage.getSavedPin(this@MainActivity)
+                }
+
                 NavHost(navController = navController, startDestination = Screen.Splash.name) {
+
                     composable(Screen.Splash.name) {
                         SplashScreen {
                             if (isFirstLaunch) {
@@ -38,8 +47,15 @@ class MainActivity : ComponentActivity() {
                                     popUpTo(Screen.Splash.name) { inclusive = true }
                                 }
                             } else {
-                                navController.navigate(Screen.SignIn.name) {
-                                    popUpTo(Screen.Splash.name) { inclusive = true }
+                                if (savedPin.value != null) {
+                                    navController.navigate(Screen.SetupPin.name) { // verification mode
+                                        popUpTo(Screen.Splash.name) { inclusive = true }
+                                    }
+                                } else {
+                                    // No PIN yet, go to SignIn
+                                    navController.navigate(Screen.SignIn.name) {
+                                        popUpTo(Screen.Splash.name) { inclusive = true }
+                                    }
                                 }
                             }
                         }
@@ -66,7 +82,7 @@ class MainActivity : ComponentActivity() {
                         OnboardingScreen {
                             PreferenceManager.setFirstLaunchDone(this@MainActivity)
                             isFirstLaunch = false
-                            navController.navigate(Screen.SignIn.name) {
+                            navController.navigate(Screen.SignUp.name) {
                                 popUpTo(Screen.Onboarding.name) { inclusive = true }
                             }
                         }
@@ -76,7 +92,13 @@ class MainActivity : ComponentActivity() {
                         SignInScreen(
                             navController = navController,
                             onSwitchClick = { navController.navigate(Screen.SignUp.name) },
-                            viewModel = viewModel
+                            viewModel = viewModel,
+                            onLoginSuccess = {
+                                // After login, go to SetupPin (setup mode)
+                                navController.navigate(Screen.SetupPin.name) {
+                                    popUpTo(Screen.SignIn.name) { inclusive = true }
+                                }
+                            }
                         )
                     }
 
@@ -87,8 +109,18 @@ class MainActivity : ComponentActivity() {
                             isChecked = isChecked,
                             onCheckedChange = { isChecked = it },
                             onPrivacyPolicyClick = {},
-                            viewModel = viewModel
+                            viewModel = viewModel,
+                            onSignUpSuccess = {
+                                // After signup, go to SetupPin (setup mode)
+                                navController.navigate(Screen.SetupPin.name) {
+                                    popUpTo(Screen.SignUp.name) { inclusive = true }
+                                }
+                            }
                         )
+                    }
+
+                    composable(Screen.SetupPin.name) {
+                        SetupPinScreen(navController = navController)
                     }
 
                     composable(Screen.ExpenseCategory.name) {
@@ -103,3 +135,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+

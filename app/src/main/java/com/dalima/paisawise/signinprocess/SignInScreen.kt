@@ -1,5 +1,6 @@
 package com.dalima.paisawise.signinprocess
 
+import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -39,7 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
-
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -47,6 +48,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dalima.paisawise.R
 import com.dalima.paisawise.Enum.Screen
+import com.dalima.paisawise.PinStorage
 import com.dalima.paisawise.ui.theme.ButtonGreen
 import com.dalima.paisawise.ui.theme.LightGreen
 import com.dalima.paisawise.viewmodel.AuthViewModel
@@ -60,7 +62,8 @@ import com.google.firebase.auth.GoogleAuthProvider
 fun SignInScreen(
     navController: NavController,
     onSwitchClick: () -> Unit,
-    viewModel: AuthViewModel = viewModel()) {
+    viewModel: AuthViewModel = viewModel(),
+    onLoginSuccess: () -> Unit ) {
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -77,19 +80,18 @@ fun SignInScreen(
             Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
         }
     }
+    // 🔹 Check if user already logged in
     LaunchedEffect(Unit) {
         val currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser != null) {
-            navController.navigate(Screen.ExpenseCategory.name) {
-                popUpTo(0) { inclusive = true } // optional: clears back stack
-            }
+            handleLoginNavigation(context, navController, onLoginSuccess)
         }
     }
     LaunchedEffect(Unit) {
         viewModel.authStatus.observe(lifecycleOwner) { result ->
             result?.let {
                 if (it.isSuccess) {
-                    navController.navigate(Screen.ExpenseCategory.name)
+                    handleLoginNavigation(context, navController, onLoginSuccess)
                 } else {
                     Toast.makeText(context, it.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_LONG).show()
                 }
@@ -137,7 +139,15 @@ Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                placeholder = { Text("ex: jon.smith@email.com") },
+                placeholder = {
+                    if (email.isEmpty()) {
+                        Text(
+                            "ex: jon.smith@email.com",
+                            color = Color.Gray
+                        )
+                    }
+                },
+                textStyle = TextStyle(color = Color.Black),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -168,7 +178,15 @@ Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                placeholder = { Text(".....") },
+                placeholder = {
+                    if (password.isEmpty()) {
+                        Text(
+                            ".....",
+                            color = Color.Gray
+                        )
+                    }
+                },
+                textStyle = TextStyle(color = Color.Black),
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -191,7 +209,32 @@ Spacer(modifier = Modifier.height(8.dp))
                 .fillMaxWidth()
                 .padding(horizontal = 70.dp),
 
-            onClick = {viewModel.signIn(email, password)},
+            onClick = {
+                when {
+                    email.isBlank() && password.isBlank() -> {
+                        Toast.makeText(context, "Please enter email and password", Toast.LENGTH_SHORT).show()
+                    }
+                    email.isBlank() -> {
+                        Toast.makeText(context, "Please enter email", Toast.LENGTH_SHORT).show()
+                    }
+                    password.isBlank() -> {
+                        Toast.makeText(context, "Please enter password", Toast.LENGTH_SHORT).show()
+                    }
+                    !viewModel.isValidEmail(email) && viewModel.isValidPassword(password) -> {
+                        Toast.makeText(context, "Please enter a valid email", Toast.LENGTH_SHORT).show()
+                    }
+                    viewModel.isValidEmail(email) && !viewModel.isValidPassword(password) -> {
+                        Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
+                    }
+                    !viewModel.isValidEmail(email) && !viewModel.isValidPassword(password) -> {
+                        Toast.makeText(context, "Invalid email and password", Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        // All fields valid
+                        viewModel.signIn(email, password)
+                    }
+                }
+            },
             shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = ButtonGreen,
@@ -255,12 +298,26 @@ Spacer(modifier = Modifier.height(8.dp))
 
     }
 }
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun SignInScreenPreview() {
-    SignInScreen(
-        navController = rememberNavController(),
-        onSwitchClick = {}
-    )
+private fun handleLoginNavigation(context: Context, navController: NavController, onLoginSuccess: () -> Unit) {
+    val savedPin = PinStorage.getSavedPin(context)
+    if (savedPin.isNullOrEmpty()) {
+        // No PIN set, go to setup
+        onLoginSuccess()
+    } else {
+        // PIN exists, go directly to main app
+        navController.navigate(Screen.ExpenseCategory.name) {
+            popUpTo(0) { inclusive = true }
+        }
+    }
 }
+
+
+//@Preview(showBackground = true, showSystemUi = true)
+//@Composable
+//fun SignInScreenPreview() {
+//    SignInScreen(
+//        navController = rememberNavController(),
+//        onSwitchClick = {}
+//    )
+//}
 

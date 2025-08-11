@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import retrofit2.http.GET
 
 @Dao
 interface ExpenseDao {
@@ -19,4 +20,8 @@ interface ExpenseDao {
     @Query("DELETE FROM expenses WHERE id = :expenseId")
     suspend fun deleteExpenseById(expenseId: Int)
 
+}
+interface CurrencyApi {
+    @GET("symbols")
+    suspend fun getSymbols(): CurrencySymbolResponse
 }

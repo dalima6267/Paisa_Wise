@@ -56,6 +56,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.GoogleAuthProvider
+import androidx.compose.ui.text.TextStyle
+
 
 @Composable
 fun SignUpScreen(    onSwitchClick: () -> Unit,
@@ -63,7 +65,8 @@ fun SignUpScreen(    onSwitchClick: () -> Unit,
                      onCheckedChange: (Boolean) -> Unit,
                      onPrivacyPolicyClick: () -> Unit,
                      navController: NavController,
-                     viewModel: AuthViewModel = viewModel()){
+                     viewModel: AuthViewModel = viewModel(),
+                     onSignUpSuccess:()-> Unit){
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -132,7 +135,15 @@ fun SignUpScreen(    onSwitchClick: () -> Unit,
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                placeholder = { Text("Enter your name") },
+                placeholder = {
+                    if (email.isEmpty()) {
+                        Text(
+                            "Enter your Name",
+                            color = Color.Gray
+                        )
+                    }
+                },
+                textStyle = TextStyle(color = Color.Black),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -145,7 +156,7 @@ fun SignUpScreen(    onSwitchClick: () -> Unit,
             )
         }
 
-// PASSWORD FIELD
+
         Spacer(modifier = Modifier.height(12.dp))
 
         Column(
@@ -163,7 +174,15 @@ fun SignUpScreen(    onSwitchClick: () -> Unit,
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                placeholder = { Text("ex: jon.smith@email.com")},
+                placeholder = {
+                    if (email.isEmpty()) {
+                        Text(
+                            "ex: jon.smith@email.com",
+                            color = Color.Gray
+                        )
+                    }
+                },
+                textStyle = TextStyle(color = Color.Black),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -193,7 +212,15 @@ fun SignUpScreen(    onSwitchClick: () -> Unit,
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                placeholder = { Text(".....") },
+                placeholder = {
+                    if (password.isEmpty()) {
+                        Text(
+                            ".....",
+                            color = Color.Gray
+                        )
+                    }
+                },
+                textStyle = TextStyle(color = Color.Black),
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -261,14 +288,38 @@ fun SignUpScreen(    onSwitchClick: () -> Unit,
                 .padding(horizontal = 70.dp),
 
             onClick = {
-                viewModel.signUp(name, email, password) },
+                when {
+                    email.isBlank() && password.isBlank() -> {
+                        Toast.makeText(context, "Please enter email and password", Toast.LENGTH_SHORT).show()
+                    }
+                    email.isBlank() -> {
+                        Toast.makeText(context, "Please enter email", Toast.LENGTH_SHORT).show()
+                    }
+                    password.isBlank() -> {
+                        Toast.makeText(context, "Please enter password", Toast.LENGTH_SHORT).show()
+                    }
+                    !viewModel.isValidEmail(email) && viewModel.isValidPassword(password) -> {
+                        Toast.makeText(context, "Please enter a valid email", Toast.LENGTH_SHORT).show()
+                    }
+                    viewModel.isValidEmail(email) && !viewModel.isValidPassword(password) -> {
+                        Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
+                    }
+                    !viewModel.isValidEmail(email) && !viewModel.isValidPassword(password) -> {
+                        Toast.makeText(context, "Invalid email and password", Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        // All fields valid
+                        viewModel.signIn(email, password)
+                    }
+                }
+            },
             shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = ButtonGreen,
                 contentColor = Color.White
             )
         ) {
-            Text("SIGN IN", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text("SIGN UP", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
 
         Spacer(modifier = Modifier.height(18.dp))
@@ -325,6 +376,7 @@ fun SignUpScreen(    onSwitchClick: () -> Unit,
 
     }
 }
+
 //@Preview(showBackground = true, showSystemUi = true)
 //@Composable
 //fun SignUpScreenPreview() {
