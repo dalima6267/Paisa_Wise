@@ -30,6 +30,14 @@ class AuthViewModel(private val repository: AuthRepository = AuthRepository()) :
             _authStatus.postValue(repository.signInWithGoogle(credential))
         }
     }
+    fun isValidEmail(email: String): Boolean {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+
+    fun isValidPassword(password: String): Boolean {
+        // For example, password must be at least 6 chars
+        return password.length >= 6
+    }
 
     fun clearStatus() {
         _authStatus.postValue(null)

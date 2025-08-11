@@ -1,6 +1,4 @@
 package com.dalima.paisawise
-
-import android.R.attr.category
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -194,7 +192,7 @@ fun ExpenseLayout(navController: NavController,onAddClick: () -> Unit,totalAmoun
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             OutlinedButton(
-                onClick = { /* Transaction */ },
+                onClick = {  navController.navigate("TransactionScreen") },
                 modifier = Modifier
                     .weight(1f)
                     .height(100.dp),
@@ -207,7 +205,7 @@ fun ExpenseLayout(navController: NavController,onAddClick: () -> Unit,totalAmoun
             }
 
             OutlinedButton(
-                onClick = { /* Analysis */ },
+                onClick = { navController.navigate("AnalysisScreen") },
                 modifier = Modifier
                     .weight(1f)
                     .height(100.dp),

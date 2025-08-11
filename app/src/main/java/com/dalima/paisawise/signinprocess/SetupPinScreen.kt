@@ -48,7 +48,10 @@ import com.dalima.paisawise.PinStorage
 fun SetupPinScreen(navController: NavController) {
     val pinLength = 4
     var pin by remember { mutableStateOf("") }
+
     val context = LocalContext.current
+    val savedPin = remember { PinStorage.getSavedPin(context) }
+    val isSetupMode = savedPin == null
     val numbers = listOf(
         "1", "2", "3",
         "4", "5", "6",
@@ -125,19 +128,30 @@ fun SetupPinScreen(navController: NavController) {
                             if (index == numbers.lastIndex) {
                                 FloatingActionButton(
                                     onClick = {
-                                        if (pin.length == pinLength) {
-                                            val savedPin = PinStorage.getSavedPin(context)
-                                            if (savedPin == null) {
-                                                // First-time setup: Save PIN
-                                                PinStorage.savePin(context, pin)
-                                                // Navigate to next screen
-                                                navController.navigate(Screen.ExpenseCategory.name)
-                                            } else {
-                                                // Validate entered PIN
-                                                if (pin == savedPin) {
-                                                    navController.navigate(Screen.ExpenseCategory.name)
+                                        when {
+                                            pin.isEmpty() -> {
+                                                Toast.makeText(context, "Pin Required!", Toast.LENGTH_SHORT).show()
+                                            }
+                                            pin.length < pinLength -> {
+                                                Toast.makeText(context, "Pin Incomplete!", Toast.LENGTH_SHORT).show()
+                                            }
+                                            else -> {
+                                                if (isSetupMode) {
+                                                    // Save PIN for first time
+                                                    PinStorage.savePin(context, pin)
+                                                    navController.navigate(Screen.ExpenseCategory.name) {
+                                                        popUpTo(Screen.SetupPin.name) { inclusive = true }
+                                                    }
                                                 } else {
-                                                    Toast.makeText(context, "Incorrect PIN", Toast.LENGTH_SHORT).show()
+                                                    // Validate PIN
+                                                    if (pin == savedPin) {
+                                                        navController.navigate(Screen.ExpenseCategory.name) {
+                                                            popUpTo(Screen.SetupPin.name) { inclusive = true }
+                                                        }
+                                                    } else {
+                                                        Toast.makeText(context, "Incorrect Pin!", Toast.LENGTH_SHORT).show()
+                                                        pin = "" // Clear entered PIN
+                                                    }
                                                 }
                                             }
                                         }

@@ -24,7 +24,7 @@ fun ProfileItem(
     title:String,
     value:String="",
     showArrow:Boolean=true,
-    onClick: () -> Unit
+    onClick:  () -> Unit
 
 ){
     Row(

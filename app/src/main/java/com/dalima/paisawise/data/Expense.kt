@@ -12,3 +12,12 @@ val title: String,
 val amount: Double,
 val date: String
 )
+data class CurrencySymbolResponse(
+    val success: Boolean,
+    val symbols: Map<String, CurrencyInfo>
+)
+
+data class CurrencyInfo(
+    val description: String,
+    val code: String
+)

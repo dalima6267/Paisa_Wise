@@ -13,9 +13,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.dalima.paisawise.AddScreen
 import com.dalima.paisawise.AnalysisScreen
 import com.dalima.paisawise.AnalysisScreenRoute
 import com.dalima.paisawise.HomeScreen
+import com.dalima.paisawise.category.ExpenseCategoryScreen
 import com.dalima.paisawise.db.AppDatabase
 import com.dalima.paisawise.profileScreen.ProfileScreen
 import com.dalima.paisawise.transactionScreen.TransactionScreen
@@ -107,7 +109,10 @@ fun MainScreen(
                         ProfileScreen()
                     }
                     composable("AddScreen") {
-                        AddScreen()
+                        AddScreen(navController)
+                    }
+                    composable("ExpenseCategoryScreen") {
+                        ExpenseCategoryScreen(navController)
                     }
                 }
             }
@@ -115,7 +120,4 @@ fun MainScreen(
     }
 }
 
-@Composable
-fun AddScreen() {
-    Text("Add Screen")
-}
+
