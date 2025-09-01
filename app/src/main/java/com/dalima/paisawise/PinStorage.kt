@@ -8,7 +8,8 @@ object PinStorage {
     private const val PREF_NAME = "secure_pin_prefs"
     private const val PIN_KEY = "user_pin"
     private const val TAGS_KEY = "selected_tags"
-
+    private const val CATEGORY_NAME_KEY = "selected_category_name"
+    private const val CATEGORY_ICON_KEY = "selected_category_icon"
     private fun getSharedPrefs(context: Context) =
         EncryptedSharedPreferences.create(
             context,
@@ -44,5 +45,27 @@ object PinStorage {
     fun clearSelectedTags(context: Context) {
         val prefs=getSharedPrefs(context)
         prefs.edit().remove(TAGS_KEY).apply()
+    }
+    fun saveSelectedCategory(context: Context, categoryName: String, iconRes: Int) {
+        val prefs = getSharedPrefs(context)
+        prefs.edit()
+            .putString(CATEGORY_NAME_KEY, categoryName)
+            .putInt(CATEGORY_ICON_KEY, iconRes)
+            .apply()
+    }
+
+    fun getSelectedCategory(context: Context): Pair<String, Int>? {
+        val prefs = getSharedPrefs(context)
+        val name = prefs.getString(CATEGORY_NAME_KEY, null)
+        val icon = prefs.getInt(CATEGORY_ICON_KEY, -1)
+        return if (name != null && icon != -1) Pair(name, icon) else null
+    }
+
+    fun clearSelectedCategory(context: Context) {
+        val prefs = getSharedPrefs(context)
+        prefs.edit()
+            .remove(CATEGORY_NAME_KEY)
+            .remove(CATEGORY_ICON_KEY)
+            .apply()
     }
 }
