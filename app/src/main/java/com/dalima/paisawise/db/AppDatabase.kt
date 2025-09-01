@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import com.dalima.paisawise.data.Expense
 import com.dalima.paisawise.data.ExpenseDao
 
-@Database(entities = [Expense::class], version = 2, exportSchema = false)
+@Database(entities = [Expense::class], version = 4, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun expenseDao(): ExpenseDao
 companion object{

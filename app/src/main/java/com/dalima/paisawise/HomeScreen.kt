@@ -1,6 +1,9 @@
 package com.dalima.paisawise
+import android.R.attr.onClick
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,21 +29,28 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.dalima.paisawise.data.ExpenseDao
 import com.dalima.paisawise.db.HomeUIState
 import com.dalima.paisawise.ui.theme.ButtonGreen
-import com.dalima.paisawise.ui.theme.Gray
-import com.dalima.paisawise.ui.theme.Lavender
-import com.dalima.paisawise.ui.theme.White40
 import com.dalima.paisawise.viewmodel.HomeViewModel
 import com.dalima.paisawise.viewmodel.HomeViewModelFactory
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.dalima.paisawise.category.Category
 import com.dalima.paisawise.data.Expense
-import com.dalima.paisawise.ui.theme.Cardgreen
 import com.dalima.paisawise.viewmodel.CategoryViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -85,24 +95,27 @@ fun HomeScreen(navController: NavHostController, expenseDao: ExpenseDao) {
                 )
             }
         }
-        if(showDialog){
+        if (showDialog) {
             AddExpenseDialog(
-                categories=categories,
-                onDismiss={showDialog=false},
-                onSave={
-                    category, title, amount, date ->
+                categories = categoryViewModel.categories,
+                onDismiss = { showDialog = false },
+                onSave = { category, iconRes, title, amount, date, description, invoice ->
                     homeViewModel.addExpense(
                         Expense(
                             category = category,
+                            categoryIconRes = iconRes,
                             title = title,
                             amount = amount.toDoubleOrNull() ?: 0.0,
-                            date = date
+                            date = date,
+                            description = description,
+                            invoice = invoice
                         )
                     )
-                    showDialog=false
+                    showDialog = false
                 }
             )
         }
+
     }
 }
 
@@ -146,248 +159,535 @@ fun ExpenseLayout(navController: NavController,onAddClick: () -> Unit,totalAmoun
     Column(
         modifier = Modifier
             .fillMaxSize()
-        .padding(10.dp).background(White40)
+        .padding(16.dp)
     ) {
         Spacer(modifier = Modifier.height(10.dp))
 
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = 8.dp,
-            shape = RoundedCornerShape(10.dp),
-            backgroundColor = Cardgreen
-        ) {
-            Row(
-                modifier = Modifier
-                    .padding(10.dp)
-                    .fillMaxWidth()
-            ) {
-
-
-                Column {
-                    Text("Total expense for $currentMonth", fontWeight = FontWeight.Bold, fontSize = 26.sp)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("\u20B9$totalAmount", fontSize = 16.sp)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(comparison, fontSize = 16.sp)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("Highest type: $highestCategory", fontSize = 16.sp)
-                }
-                Spacer(modifier = Modifier.width(30.dp))
-                Image(
-                    painter = painterResource(id = R.drawable.monthlyexpense), // Replace with your drawable
-                    contentDescription = "Expense Icon",
-                    modifier = Modifier
-                        .size(120.dp)
-                        .padding(end = 16.dp)
+            shape = RoundedCornerShape(16.dp),
+            backgroundColor = Color(0xFF2FB771),
+            elevation = 4.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .shadow(
+                    elevation = 26.dp,
+                    shape = RoundedCornerShape(20.dp),
+                    clip = false
                 )
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column {
+                        Text("This Month", color = Color.White, fontSize = 16.sp)
+                        Text("₹${totalAmount}", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = Color.White.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(50.dp)
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = currentMonth,
+                            color = Color.White.copy(alpha = 0.8f),
+                            fontSize = 12.sp
+                        )
+                    }
+
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_last_month), 
+                                contentDescription = "Last Month Icon",
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Last Month", color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
+
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            "₹ 1840.00",
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text("(Less)", color = Color.White, fontSize = 10.sp)
+                    }
+
+                    Column(horizontalAlignment = Alignment.End) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_today), // your icon here
+                                contentDescription = "Today Icon",
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Today", color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
+
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            "₹284.00",
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text("(Higher than daily avg)", color = Color.White, fontSize = 10.sp)
+                    }
+                }
+
             }
         }
         Spacer(modifier = Modifier.height(20.dp))
 
-        Text("Quick Links", fontWeight = FontWeight.SemiBold)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                "Quick Actions",
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            QuickActionButton(
+                "Transactions",
+                R.drawable.ic_transaction,
+                onClick = { navController.navigate("TransactionScreen") },
+                modifier = Modifier.weight(1f)
+            )
+            QuickActionButton(
+                "Analysis",
+                R.drawable.ic_analysis,
+                onClick = { navController.navigate("AnalysisScreen") },
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+
         Spacer(modifier = Modifier.height(20.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            OutlinedButton(
-                onClick = {  navController.navigate("TransactionScreen") },
-                modifier = Modifier
-                    .weight(1f)
-                    .height(100.dp),
-                colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Gray),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(Icons.AutoMirrored.Filled.List, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Transaction", color = Color.Black)
-            }
 
-            OutlinedButton(
-                onClick = { navController.navigate("AnalysisScreen") },
-                modifier = Modifier
-                    .weight(1f)
-                    .height(100.dp),
-                colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Gray),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(Icons.AutoMirrored.Filled.List, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Get analysis report", color = Color.Black)
-            }
+            Text("Recent Transactions", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+            Text(
+                text = "See all",
+                color = Color.Gray,
+                fontSize = 14.sp,
+                modifier = Modifier.clickable {
+                    navController.navigate("TransactionScreen")
+                }
+            )
         }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Text("Recent Transactions", fontWeight = FontWeight.SemiBold)
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // ✅ LazyColumn below heading like RecyclerView
         LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.weight(1f)
         ) {
-            // ✅ Only show two transaction items
-            items(transactions.take(3)) { transaction ->
-                TransactionItemCard(transaction)
+            items(transactions.take(5)) { expense ->
+                TransactionItemCard(expense)
             }
         }
-
-        Spacer(modifier = Modifier.height(5.dp))
-        Text(
-            text = "Show More....",
-            modifier = Modifier
-                .align(Alignment.End)
-                .clickable {
-                    // Navigate to another fragment
-                    navController.navigate("TransactionScreen")
-                },
-            color = Color.Blue,
-            fontWeight = FontWeight.Bold,
-            fontSize = 12.sp
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-        Button(
-            onClick = onAddClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp),
-            colors = ButtonDefaults.buttonColors(backgroundColor = ButtonGreen)
-        ) {
-            Text(
-                text = "Add a new expense",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
-        }
-        Spacer(modifier = Modifier.height(10.dp))
     }
 }
 @Composable
-fun TransactionItemCard(expense: Expense) {
+fun QuickActionButton(
+    title: String,
+    iconRes: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Card(
+        shape = RoundedCornerShape(30.dp),
+        backgroundColor =ButtonGreen ,
+        elevation = 2.dp,
+        modifier = modifier
+            .height(90.dp)
+            .shadow(
+                elevation = 20.dp,
+                shape = RoundedCornerShape(30.dp),
+                clip = false
+            )
+            .clickable { onClick() }
+    ) {
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = title,
+                tint = Color.White,
+                modifier = Modifier.size(44.dp)
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(title, fontSize = 16.sp, color = Color.White)
+        }
+    }
+}
+
+@Composable
+fun TransactionItemCard(expense: Expense) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp),
-        shape = RoundedCornerShape(12.dp),
-        elevation = 4.dp,
-        backgroundColor = Lavender
+            .background(Color.White, RoundedCornerShape(12.dp))
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(
-                    text = expense.category,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = Color.Black
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = expense.title,
-                    fontSize = 14.sp,
-                    color = Color.DarkGray
-                )
-            }
-            Text(
-                text = "₹${expense.amount}",
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                color = Color.Black
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                painter = painterResource(id = expense.categoryIconRes),
+                contentDescription = null,
+                tint = Color.Unspecified,
+                modifier = Modifier.size(32.dp)
             )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(expense.category, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text(expense.date, fontSize = 12.sp, color = Color.Gray)
+            }
         }
+        Text(
+            text = "₹${expense.amount}",
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            color = Color.Red
+        )
     }
 }
 @Composable
 fun AddExpenseDialog(
-    categories: List<String>,
+    categories: List<Category>,
     onDismiss: () -> Unit,
-    onSave: (category: String, title: String, amount: String, date:String) -> Unit
-) {
+    onSave: (
+        category: String,
+        categoryIconRes: Int,
+        title: String,
+        amount: String,
+        date: String,
+        description: String,
+        invoice: String
+    ) -> Unit) {
     var title by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
-    var selectedCategory by remember { mutableStateOf(categories.firstOrNull() ?: "") }
+    var selectedCategory by remember { mutableStateOf<Category?>(null) }
+    var selectedIconRes by remember { mutableStateOf(0) }
+    var description by remember { mutableStateOf("") }
+    var invoiceFile by remember { mutableStateOf("") }
 
-    val currentDate=remember{
-        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val currentDate = remember {
+        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         formatter.format(Date())
     }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Add Expense") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Title/Description") }
-                )
-                OutlinedTextField(
-                    value = amount,
-                    onValueChange = { amount = it },
-                    label = { Text("Amount") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-                Box {
-                    OutlinedTextField(
-                        value = selectedCategory,
-                        onValueChange = {},
-                        label = { Text("Category") },
-                        readOnly = true,
-                        trailingIcon = {
-                            IconButton(onClick = { expanded = true }) {
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                            }
-                        }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            backgroundColor = Color(0xFFE9F3F2),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White, RoundedCornerShape(12.dp))
+                ) {
+                    Text(
+                        text = "Add New Expense",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        modifier = Modifier.align(Alignment.Center)
                     )
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        categories.forEach { cat ->
-                            DropdownMenuItem(onClick = {
-                                selectedCategory = cat
-                                expanded = false
-                            }) {
-                                Text(cat)
+                }
+
+
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Title
+                LabeledTextField(
+                    label = "Title",
+                    value = title,
+                    placeholder = "ex: Train ticket to Raipur",
+                    onValueChange = { title = it },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Category & Date
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Category
+                    Box(modifier = Modifier.weight(1f)) {
+                        Column {
+                            Text(
+                                text = "Category",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(36.dp)
+                                    .background(Color.White, RoundedCornerShape(8.dp))
+                                    .border(1.dp, Color(0xFF34AC90), RoundedCornerShape(8.dp))
+                                    .clickable { expanded = true },
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Text(
+                                    text = selectedCategory?.name ?: "Select Category",
+                                    color = if (selectedCategory == null) Color.Gray else Color.Black,
+                                    fontSize = 14.sp,
+                                    style = TextStyle(
+                                        lineHeight = 4.sp   // 🔹 Match with fontSize
+                                    ),
+                                    modifier = Modifier.padding(start = 12.dp)
+                                )
+
+
+                                DropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false }
+                                ) {
+                                    categories.forEach { cat ->
+                                        DropdownMenuItem(onClick = {
+                                            selectedCategory = cat
+                                            expanded = false
+                                        }) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Image(
+                                                    painter = painterResource(id = cat.iconRes),
+                                                    contentDescription = cat.name,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(cat.name)
+                                            }
+                                        }
+                                    }
+                                }
+
                             }
                         }
                     }
+
+                    // Date
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Date",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(36.dp)
+                                .background(Color.White, RoundedCornerShape(8.dp))
+                                .border(1.dp, Color(0xFF34AC90), RoundedCornerShape(8.dp))
+                                .clickable { /* TODO: open date picker */ },
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                currentDate,
+                                color = Color.Black,
+                                modifier = Modifier.padding(start = 12.dp)
+                            )
+                        }
+                    }
                 }
-                // Show the current date as read-only
-                OutlinedTextField(
-                    value = currentDate,
-                    onValueChange = {},
-                    label = { Text("Date") },
-                    readOnly = true
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Amount
+                LabeledTextField(
+                    label = "Amount",
+                    value = amount,
+                    placeholder = "ex: 512",
+                    onValueChange = { amount = it },
+                    leading = { Text("₹", fontWeight = FontWeight.Bold) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                onSave(selectedCategory, title, amount,currentDate)
-            }) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Description
+                LabeledTextField(
+                    label = "Description (Optional)",
+                    value = description,
+                    placeholder = "ex: The ticket was booked",
+                    onValueChange = { description = it },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Invoice Upload
+                Column {
+                    Text(
+                        text = "Invoice",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedButton(
+                        onClick = { /* Open file/image picker */ },
+                        modifier = Modifier.fillMaxWidth().height(36.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFF34AC90)),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            backgroundColor = Color.White,
+                            contentColor = Color.Black
+                        )
+                    ) {
+                        Text(if (invoiceFile.isEmpty()) "Choose File / Take Picture" else invoiceFile)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        if (selectedCategory != null) {
+                            onSave(
+                                selectedCategory!!.name,
+                                selectedCategory!!.iconRes,
+                                title,
+                                amount,
+                                currentDate,
+                                description,
+                                invoiceFile
+                            )
+                        }                    },
+                    modifier = Modifier.fillMaxWidth().height(36.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = ButtonGreen)
+                ) {
+                    Text("Add Expense", color = Color.White)
+                }
             }
         }
-    )
+    }
 }
+
+@Composable
+fun LabeledTextField(
+    label: String,
+    value: String,
+    placeholder: String,
+    onValueChange: (String) -> Unit,
+    leading: @Composable (() -> Unit)? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
+) {
+    val focusRequester = remember { FocusRequester() }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.Gray
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(36.dp)
+                .background(Color.White, RoundedCornerShape(8.dp))
+                .border(1.dp, Color(0xFF34AC90), RoundedCornerShape(8.dp))
+                .clickable {
+                    // 🔹 Request focus when anywhere in the box is touched
+                    focusRequester.requestFocus()
+                },
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+            ) {
+                if (leading != null) {
+                    leading()
+                    Spacer(modifier = Modifier.width(4.dp))
+                }
+
+                // Show placeholder when empty
+                if (value.isEmpty()) {
+                    Text(
+                        text = placeholder,
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                }
+
+                BasicTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    singleLine = true,
+                    textStyle = TextStyle(
+                        color = Color.Black,
+                        fontSize = 14.sp
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester) // 🔹 Attach FocusRequester
+                )
+            }
+        }
+    }
+}
+
+
+
+
 
 

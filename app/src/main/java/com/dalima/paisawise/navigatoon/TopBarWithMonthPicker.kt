@@ -1,5 +1,5 @@
 package com.dalima.paisawise.navigatoon
-
+import com.dalima.paisawise.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
@@ -18,7 +18,6 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +34,7 @@ import java.util.Locale
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.painterResource
 
 @Composable
 fun TopBarWithMonthPicker(
@@ -81,16 +81,16 @@ fun TopBarWithMonthPicker(
         Box {
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(50))
                     .clickable { expanded = true }
-                    .background(Color.White)
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
+                    painter = painterResource(id = R.drawable.dropdown),
                     contentDescription = "Dropdown Arrow",
-                    tint = Color(0xFF47A671)
+                    tint = Color.Unspecified, // keep original drawable color
+                    modifier = Modifier.size(16.dp)
                 )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(text = selectedMonth, color = Color.Black)
             }
 

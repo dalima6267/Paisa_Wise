@@ -2,28 +2,32 @@ package com.dalima.paisawise.navigatoon
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.dalima.paisawise.AddScreen
-import com.dalima.paisawise.AnalysisScreen
-import com.dalima.paisawise.AnalysisScreenRoute
-import com.dalima.paisawise.HomeScreen
+import com.dalima.paisawise.*
+import com.dalima.paisawise.category.Category
 import com.dalima.paisawise.category.ExpenseCategoryScreen
+import com.dalima.paisawise.data.Expense
 import com.dalima.paisawise.db.AppDatabase
 import com.dalima.paisawise.profileScreen.ProfileScreen
 import com.dalima.paisawise.transactionScreen.TransactionScreen
 import com.dalima.paisawise.ui.theme.Black
 import com.dalima.paisawise.viewmodel.CategoryViewModel
+import com.dalima.paisawise.viewmodel.HomeViewModel
+import com.dalima.paisawise.viewmodel.HomeViewModelFactory
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(
@@ -35,7 +39,12 @@ fun MainScreen(
     var selectedIndex by remember { mutableStateOf(0) }
     val selectedTags by viewModel.selectedTags.collectAsState()
     val systemUiController = rememberSystemUiController()
-
+    val categoryViewModel: CategoryViewModel = viewModel()
+    // Dialog state
+    var showDialog by remember{mutableStateOf(false)}
+    val homeViewModel: HomeViewModel = viewModel(
+        factory = HomeViewModelFactory(expenseDao)
+    )
     // Set status bar
     SideEffect {
         systemUiController.setStatusBarColor(
@@ -81,9 +90,8 @@ fun MainScreen(
                                 popUpTo("HomeScreen")
                                 launchSingleTop = true
                             }
-                            4 -> navController.navigate("AddScreen") {
-                                popUpTo("HomeScreen")
-                                launchSingleTop = true
+                            4 -> {
+                                showDialog = true // Show dialog instead of navigating
                             }
                         }
                     }
@@ -108,9 +116,7 @@ fun MainScreen(
                     composable("ProfileScreen") {
                         ProfileScreen()
                     }
-                    composable("AddScreen") {
-                        AddScreen(navController)
-                    }
+                    // Removed "AddScreen" navigation since it's now a dialog
                     composable("ExpenseCategoryScreen") {
                         ExpenseCategoryScreen(navController)
                     }
@@ -118,6 +124,51 @@ fun MainScreen(
             }
         }
     }
+
+    // Show Add Expense Dialog
+    if (showDialog) {
+        var showCategoryPicker by remember { mutableStateOf(false) }
+        var selectedCategoryName by remember { mutableStateOf("") }
+        var selectedCategoryIcon by remember { mutableStateOf<Int?>(null) }
+
+        AddExpenseDialog(
+            categories = categoryViewModel.categories, // List<Category>
+            onDismiss = { showDialog = false },
+            onSave = { categoryName, iconRes, title, amount, date, description, invoice ->
+                homeViewModel.addExpense(
+                    Expense(
+                        category = categoryName,
+                        categoryIconRes = iconRes, // store icon resource
+                        title = title,
+                        amount = amount.toDoubleOrNull() ?: 0.0,
+                        date = date,
+                        description = description,
+                        invoice = invoice
+                    )
+                )
+                showDialog = false
+            }
+        )
+
+
+        if (showCategoryPicker) {
+            androidx.compose.ui.window.Dialog(onDismissRequest = { showCategoryPicker = false }) {
+                androidx.compose.material.Card(
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                    backgroundColor = Color.White,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(500.dp)
+                ) {
+                    ExpenseCategoryScreen(
+                        onCategorySelected = { category ->
+                            selectedCategoryName = category.name
+                            selectedCategoryIcon = category.iconRes
+                            showCategoryPicker = false
+                        }
+                    )
+                }
+            }
+        }
+    }
 }
-
-

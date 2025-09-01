@@ -1,6 +1,8 @@
 package com.dalima.paisawise.category
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.dalima.paisawise.ui.theme.Black
 import com.dalima.paisawise.ui.theme.ButtonGreen
@@ -24,7 +25,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.dalima.paisawise.Enum.Screen
 import com.dalima.paisawise.R
 import com.dalima.paisawise.viewmodel.CategoryViewModel
@@ -32,80 +32,57 @@ import com.dalima.paisawise.viewmodel.CategoryViewModel
 data class Category(
     val name: String,
     val tags: List<String>,
-    val icon: Painter
+    val iconRes: Int
 )
 
 @Composable
-fun ExpenseCategoryScreen(navController: NavController,
-                          viewModel: CategoryViewModel = viewModel()) {
+fun ExpenseCategoryScreen(
+    navController: NavController? = null, // nullable so we can call without navigation
+    viewModel: CategoryViewModel = viewModel(),
+    onCategorySelected: ((Category) -> Unit)? = null // callback when used as a picker
+) {
     val selectedTags = viewModel.selectedTags.collectAsState(emptyList())
 
     val categories = listOf(
-        Category(
-            "Essentials & Living",
+        Category("Essentials & Living",
             listOf("Groceries", "Rent", "Utilities", "Internet", "Mobile", "Transportation", "Medical", "EMIs"),
-            painterResource(id = R.drawable.essentials)
-        ),
-        Category(
-            "Food & Dining",
+             R.drawable.essentials),
+        Category("Food & Dining",
             listOf("Restaurants", "Cafe", "Snacks", "Delivery", "Office Lunch", "Date", "Dinner"),
-            painterResource(id = R.drawable.food)
-        ),
-        Category(
-            "Entertainment & Leisure",
+             R.drawable.food),
+        Category("Entertainment & Leisure",
             listOf("Movies", "Events", "Gaming", "Outdoor", "Stand Up", "Subscriptions", "Show"),
-            painterResource(id = R.drawable.entertainment)
-        ),
-        Category(
-            "Shopping",
+            R.drawable.entertainment),
+        Category("Shopping",
             listOf("Footwear", "Accessories", "Electronics", "Books", "Pens"),
-            painterResource(id = R.drawable.shopping)
-        ),
-        Category(
-            "Health & Wellness",
+             R.drawable.shopping),
+        Category("Health & Wellness",
             listOf("Gym/Fitness", "Yoga/Meditation", "Medical Bills", "Medicines"),
-            painterResource(id = R.drawable.health)
-        ),
-        Category(
-            "Travel",
+             R.drawable.health),
+        Category("Travel",
             listOf("Flight", "Train", "Hotel", "Stays", "Cabs", "Gifts", "Souvenir"),
-            painterResource(id = R.drawable.travels)
-        ),
-        Category(
-            "Family & Kids",
+            R.drawable.travels),
+        Category("Family & Kids",
             listOf("School Fees", "Childcare", "Gifts/Toys", "Family Outings"),
-            painterResource(id = R.drawable.family)
-        ),
-        Category(
-            "Finance & Insurance",
+            R.drawable.family),
+        Category("Finance & Insurance",
             listOf("Credit Card Payments", "Insurance Premiums", "Investment Contributions", "Savings/FD"),
-            painterResource(id = R.drawable.finance)
-        ),
-        Category(
-            "Gifts & Donations",
+             R.drawable.finance),
+        Category("Gifts & Donations",
             listOf("Festival Gifting", "Charity Donations", "Weddings/Birthdays"),
-            painterResource(id = R.drawable.gift)
-        ),
-        Category(
-            "Home & Maintenance",
+             R.drawable.gift),
+        Category("Home & Maintenance",
             listOf("Repairs", "Furniture", "Cleaning Services"),
-            painterResource(id = R.drawable.success)
-        ),
-        Category(
-            "Work & Business",
+          R.drawable.success),
+        Category("Work & Business",
             listOf("Office Supplies", "Business Travel", "Client Meetings"),
-            painterResource(id = R.drawable.work)
-        ),
-        Category(
-            "Education & Learning",
+           R.drawable.work),
+        Category("Education & Learning",
             listOf("Courses/Online Classes", "Books/Stationery", "Workshops"),
-            painterResource(id = R.drawable.education)
-        ),
-        Category(
-            "Others/Miscellaneous",
+             R.drawable.education),
+        Category("Others/Miscellaneous",
             listOf("Uncategorized", "Tips", "Cash Withdrawals"),
-            painterResource(id = R.drawable.others)
-        )
+        R.drawable.others)
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -114,7 +91,7 @@ fun ExpenseCategoryScreen(navController: NavController,
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 16.dp)
-                .padding(bottom = 80.dp) // space for sticky button
+                .padding(bottom = if (onCategorySelected == null) 80.dp else 0.dp) // space for sticky button only if full screen
         ) {
             Spacer(modifier = Modifier.height(24.dp))
             Text(
@@ -128,23 +105,30 @@ fun ExpenseCategoryScreen(navController: NavController,
                 CategorySectionSimple(
                     category = category,
                     selectedTags = selectedTags.value,
-                    onTagToggle = viewModel::toggleTag
+                    onTagToggle = viewModel::toggleTag,
+                    onCategoryClick = {
+                        if (onCategorySelected != null) {
+                            onCategorySelected(category) // return selection
+                        }
+                    }
                 )
             }
         }
 
-        // Sticky Finish Button
-        Button(
-            onClick = {navController.navigate(Screen.Main.name) },
-            colors = ButtonDefaults.buttonColors(containerColor = ButtonGreen),
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(24.dp)
-                .height(50.dp)
-        ) {
-            Text(text="Finish", color = Color.White, fontWeight = FontWeight.Bold)
+        // Sticky Finish Button only in full screen mode
+        if (onCategorySelected == null && navController != null) {
+            Button(
+                onClick = { navController.navigate(Screen.Main.name) },
+                colors = ButtonDefaults.buttonColors(containerColor = ButtonGreen),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(24.dp)
+                    .height(50.dp)
+            ) {
+                Text(text = "Finish", color = Color.White, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
@@ -154,7 +138,8 @@ fun ExpenseCategoryScreen(navController: NavController,
 fun CategorySectionSimple(
     category: Category,
     selectedTags: List<String>,
-    onTagToggle: (String) -> Unit
+    onTagToggle: (String) -> Unit,
+    onCategoryClick: () -> Unit // used for quick selection in dialog mode
 ) {
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
         Row(
@@ -162,9 +147,11 @@ fun CategorySectionSimple(
             modifier = Modifier
                 .background(LightDarkGreen, shape = RoundedCornerShape(50.dp))
                 .padding(horizontal = 12.dp, vertical = 6.dp)
+                .fillMaxWidth()
+                .clickable { onCategoryClick() } // clickable row
         ) {
             Image(
-                painter = category.icon,
+                painter = painterResource(id = category.iconRes),
                 contentDescription = null,
                 modifier = Modifier.size(18.dp)
             )
@@ -185,7 +172,6 @@ fun CategorySectionSimple(
         ) {
             category.tags.forEach { tag ->
                 val isSelected = tag in selectedTags
-
                 FilterChip(
                     selected = isSelected,
                     onClick = { onTagToggle(tag) },
@@ -208,13 +194,4 @@ fun CategorySectionSimple(
             }
         }
     }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun ExpenseCategoryScreenPreview() {
-    ExpenseCategoryScreen(
-        navController = rememberNavController()
-    )
 }
