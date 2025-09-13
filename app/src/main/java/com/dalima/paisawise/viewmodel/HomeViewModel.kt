@@ -38,10 +38,11 @@ class HomeViewModel(private val expenseDao: ExpenseDao) : ViewModel() {
     }
 
     private fun calculateMonthlyExpenseState(expenses: List<Expense>): HomeUIState.HasExpenses {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val monthFormat = SimpleDateFormat("MM-yyyy", Locale.getDefault())
+        val dayFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val currentMonthName = SimpleDateFormat("MMMM", Locale.getDefault()).format(Date())
-
+        val todayDate = dayFormat.format(Date())
         val currentMonthKey = monthFormat.format(Date())
         val lastMonthCalendar = Calendar.getInstance().apply { add(Calendar.MONTH, -1) }
         val lastMonthKey = monthFormat.format(lastMonthCalendar.time)
@@ -63,10 +64,17 @@ class HomeViewModel(private val expenseDao: ExpenseDao) : ViewModel() {
                 false
             }
         }
-
+        val todayExpenses = expenses.filter {
+            try {
+                val parsedDate = sdf.parse(it.date)
+                parsedDate != null && dayFormat.format(parsedDate) == todayDate
+            } catch (e: Exception) {
+                false
+            }
+        }
         val currentTotal = currentMonthExpenses.sumOf { it.amount }
         val lastTotal = lastMonthExpenses.sumOf { it.amount }
-
+        val todayTotal = todayExpenses.sumOf { it.amount }
         val comparisonText = when {
             lastTotal == 0.0 && currentTotal > 0 -> "Compared to last month: +100%"
             lastTotal == 0.0 && currentTotal == 0.0 -> "No comparison available"
@@ -88,6 +96,8 @@ class HomeViewModel(private val expenseDao: ExpenseDao) : ViewModel() {
 
         return HomeUIState.HasExpenses(
             totalAmount = currentTotal,
+            lastMonthAmount = lastTotal,
+            todayAmount = todayTotal,
             comparisonText = comparisonText,
             highestCategory = highestCategory,
             currentMonthName = currentMonthName
