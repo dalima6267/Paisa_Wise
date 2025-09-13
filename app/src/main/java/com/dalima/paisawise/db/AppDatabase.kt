@@ -32,8 +32,10 @@ sealed class HomeUIState {
     object NoExpenses : HomeUIState()
     data class HasExpenses(
         val totalAmount: Double,
+        val lastMonthAmount: Double,
+        val todayAmount: Double,
         val comparisonText: String,
         val highestCategory: String,
-        val currentMonthName: String // <- NEW
+        val currentMonthName: String
     ) : HomeUIState()
 }

@@ -1,5 +1,4 @@
 package com.dalima.paisawise
-import android.R.attr.onClick
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -9,8 +8,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -44,11 +41,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.dalima.paisawise.category.Category
 import com.dalima.paisawise.data.Expense
 import com.dalima.paisawise.viewmodel.CategoryViewModel
@@ -86,8 +81,10 @@ fun HomeScreen(navController: NavHostController, expenseDao: ExpenseDao) {
                 val state = uiState as HomeUIState.HasExpenses
                 ExpenseLayout(
                     navController = navController,
-                    onAddClick = {showDialog=true},
+                    onAddClick = { showDialog = true },
                     totalAmount = state.totalAmount,
+                    lastMonthAmount = state.lastMonthAmount,
+                    todayAmount = state.todayAmount,
                     comparison = state.comparisonText,
                     highestCategory = state.highestCategory,
                     currentMonth = state.currentMonthName,
@@ -152,8 +149,15 @@ fun NoExpenseLayout(onAddClick: () -> Unit) {
 }
 
 @Composable
-fun ExpenseLayout(navController: NavController,onAddClick: () -> Unit,totalAmount: Double, comparison: String,highestCategory: String,
-                  currentMonth: String,transactions: List<Expense>
+fun ExpenseLayout( navController: NavController,
+                   onAddClick: () -> Unit,
+                   totalAmount: Double,
+                   lastMonthAmount: Double,
+                   todayAmount: Double,
+                   comparison: String,
+                   highestCategory: String,
+                   currentMonth: String,
+                   transactions: List<Expense>
 ) {
 
     Column(
@@ -186,8 +190,14 @@ fun ExpenseLayout(navController: NavController,onAddClick: () -> Unit,totalAmoun
                 ) {
                     Column {
                         Text("This Month", color = Color.White, fontSize = 16.sp)
-                        Text("₹${totalAmount}", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Bold)
-                    }
+                        Text(
+                            "₹${"%.2f".format(totalAmount)}",
+                            color = Color.White,
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(comparison, color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)                    }
                     Box(
                         modifier = Modifier
                             .background(
@@ -224,12 +234,11 @@ fun ExpenseLayout(navController: NavController,onAddClick: () -> Unit,totalAmoun
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            "₹ 1840.00",
+                            "₹${"%.2f".format(lastMonthAmount)}",
                             color = Color.White,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        Text("(Less)", color = Color.White, fontSize = 10.sp)
                     }
 
                     Column(horizontalAlignment = Alignment.End) {
@@ -245,12 +254,11 @@ fun ExpenseLayout(navController: NavController,onAddClick: () -> Unit,totalAmoun
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            "₹284.00",
+                            "₹${"%.2f".format(todayAmount)}",
                             color = Color.White,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        Text("(Higher than daily avg)", color = Color.White, fontSize = 10.sp)
                     }
                 }
 
