@@ -5,43 +5,83 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.remember
+import androidx.compose.material.ExposedDropdownMenuBox
+import androidx.compose.material.ExposedDropdownMenuDefaults
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
-import com.github.mikephil.charting.utils.ColorTemplate
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.dalima.paisawise.data.ExpenseDao
 import com.dalima.paisawise.ui.theme.ButtonGreen
-import com.dalima.paisawise.ui.theme.Lightred
-import com.dalima.paisawise.viewmodel.HomeViewModel
-import com.dalima.paisawise.viewmodel.HomeViewModelFactory
-import androidx.compose.runtime.getValue
+
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AnalysisScreen(
-    analysisSummary: String,
-    expensesByType: Map<String, Float>,
-    onDownloadClick: () -> Unit,
-    onPdfGenerateClick: () -> Unit
+    totalExpense: Double,
+    expensesByType: Map<String, Double>,
+    onGenerateReportClick: () -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         Spacer(modifier = Modifier.height(10.dp))
 
-        Text("Expense Analysis Chart", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Expense Analysis Chart",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            // 🔹 Dropdown menu
+            var expanded by remember { mutableStateOf(false) }
+            var selectedOption by remember { mutableStateOf("Monthly") }
+            val options = listOf("Daily", "Weekly", "Monthly", "Yearly")
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                OutlinedTextField(
+                    value = selectedOption,
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(48.dp),
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    options.forEach { option ->
+                        DropdownMenuItem(onClick = {
+                            selectedOption = option
+                            expanded = false
+                        }) {
+                            Text(option)
+                        }
+                    }
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(14.dp))
 
@@ -50,127 +90,113 @@ fun AnalysisScreen(
                 PieChart(context).apply {
                     description.isEnabled = false
                     setUsePercentValues(false)
-                    setDrawEntryLabels(true)
-                    setEntryLabelColor(Color.BLACK)
-                    setEntryLabelTextSize(12f)
-                    centerText = "Expense Breakdown"
-                    setCenterTextSize(18f)
-                    isRotationEnabled = true
-
-                    legend.isEnabled = true
-                    legend.textSize = 14f
-                    legend.formSize = 14f
+                    setDrawEntryLabels(false)
+                    setHoleColor(Color.WHITE)
+                    setTransparentCircleAlpha(0)
+                    legend.isEnabled = false
                 }
             },
             update = { chart ->
-                val entries = expensesByType.map { (category, total) ->
-                    PieEntry(total, category) // Only category, no amount
+                chart.centerText = "Total Expense: ₹${"%.2f".format(totalExpense)}"
+                chart.setCenterTextSize(18f)
+                chart.setCenterTextColor(Color.BLACK)
+                if (expensesByType.isEmpty()) {
+                    chart.clear()
+                    chart.invalidate()
+                } else {
+                    val entries = expensesByType.map { (category, total) ->
+                        PieEntry(total.toFloat(), category)
+                    }
+
+                    val categoryColors = listOf(
+                        Color.rgb(244, 67, 54),
+                        Color.rgb(33, 150, 243),
+                        Color.rgb(76, 175, 80),
+                        Color.rgb(255, 193, 7),
+                        Color.rgb(156, 39, 176),
+                        Color.rgb(255, 87, 34),
+                        Color.rgb(63, 81, 181),
+                        Color.rgb(0, 150, 136),
+                        Color.rgb(205, 220, 57),
+                        Color.rgb(121, 85, 72),
+                        Color.rgb(96, 125, 139),
+                        Color.rgb(233, 30, 99),
+                        Color.rgb(0, 188, 212)
+                    )
+
+                    val dataSet = PieDataSet(entries, "").apply {
+                        colors = entries.mapIndexed { index, _ ->
+                            categoryColors[index % categoryColors.size]
+                        }.toMutableList()
+                        sliceSpace = 1f
+                        setDrawValues(false)
+                    }
+
+                    chart.data = PieData(dataSet).apply { setDrawValues(false) }
+                    chart.notifyDataSetChanged()
+                    chart.invalidate()
                 }
-
-                val dataSet = PieDataSet(entries, "").apply {
-                    colors = ColorTemplate.MATERIAL_COLORS.toList()
-                    sliceSpace = 3f
-                    selectionShift = 5f
-                    valueTextColor = Color.BLACK
-                    valueTextSize = 14f
-                    setDrawValues(false) // ✅ Hides value numbers from pie slices
-                }
-
-                val pieData = PieData(dataSet)
-                pieData.setDrawValues(false) // ✅ Optional, double assurance
-
-                chart.data = pieData
-                chart.invalidate()
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp)
+                .height(280.dp)
+                .padding(top = 10.dp)
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(ComposeColor(0xFFDFEBEA))
         ) {
-            Text("Analysis Summary", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Button(
-                onClick = onDownloadClick,
-                colors = ButtonDefaults.buttonColors(ButtonGreen)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Text("Download", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Button(
+                    onClick = { /*TODO*/ },
+                    colors = ButtonDefaults.buttonColors(ButtonGreen),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 4.dp)
+                ) {
+                    Text("Categorical", color = ComposeColor.White)
+                }
+                Button(
+                    onClick = { /*TODO*/ },
+                    colors = ButtonDefaults.buttonColors(ComposeColor(0xFFDFF0D8)), // Light green
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 4.dp)
+                ) {
+                    Text("Categorical", color = ComposeColor.Black)
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.weight(1f))
 
-        Text(
-            text = analysisSummary,
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(ComposeColor.LightGray, RoundedCornerShape(8.dp))
-                .padding(12.dp),
-            fontSize = 14.sp
-        )
-
-        Spacer(modifier = Modifier.height(214.dp))
-
+        // 🔹 Generate Report Button
         Button(
-            onClick = onPdfGenerateClick,
-            colors = ButtonDefaults.buttonColors(Lightred),
+            onClick = onGenerateReportClick,
+            colors = ButtonDefaults.buttonColors(ButtonGreen),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(10.dp)
+                .padding(horizontal = 32.dp, vertical = 8.dp)
+                .height(40.dp),
+            shape = RoundedCornerShape(12.dp)
         ) {
-            Text("Get this report in PDF", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(
+                "Generate Report",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = ComposeColor.White
+            )
         }
     }
-}
-
-@Composable
-fun AnalysisScreenRoute(expenseDao: ExpenseDao) {
-    val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(expenseDao))
-
-    // ✅ specify type explicitly for safety
-    val categoryExpenses: Map<String, Float> by viewModel.expensesByCategory.observeAsState(initial = emptyMap())
-
-    val summary = remember(categoryExpenses) {
-        if (categoryExpenses.isNotEmpty()) {
-            val maxCategoryEntry = categoryExpenses.maxByOrNull { it.value }
-            "This month, ${maxCategoryEntry?.key} made up the largest share of your expenses."
-        } else {
-            "No expenses available to analyze."
-        }
-    }
-
-    AnalysisScreen(
-        analysisSummary = summary,
-        expensesByType = categoryExpenses,
-        onDownloadClick = {  },
-        onPdfGenerateClick = {  }
-    )
-}
-
-@Composable
-@Preview(showBackground = true)
-fun SampleChartUsage() {
-    val sampleData = mapOf(
-        "Food" to 4500f,
-        "Travel" to 2000f,
-        "Entertainment" to 1500f,
-        "Bills" to 1000f,
-        "Essential" to 3500f,
-        "Shopping" to 1000f,
-        "School" to 1500f
-        // "Bills" duplicate removed
-    )
-    val summary = "This month, Food made up the largest share of your expenses."
-
-    AnalysisScreen(
-        analysisSummary = summary,
-        expensesByType = sampleData,
-        onDownloadClick = { /* TODO */ },
-        onPdfGenerateClick = { /* TODO */ }
-    )
 }

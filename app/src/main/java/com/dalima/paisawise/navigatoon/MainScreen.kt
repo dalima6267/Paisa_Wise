@@ -14,10 +14,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.dalima.paisawise.*
-import com.dalima.paisawise.category.Category
 import com.dalima.paisawise.category.ExpenseCategoryScreen
 import com.dalima.paisawise.data.Expense
 import com.dalima.paisawise.db.AppDatabase
+import com.dalima.paisawise.db.HomeUIState
 import com.dalima.paisawise.profileScreen.ProfileScreen
 import com.dalima.paisawise.transactionScreen.TransactionScreen
 import com.dalima.paisawise.ui.theme.Black
@@ -25,9 +25,6 @@ import com.dalima.paisawise.viewmodel.CategoryViewModel
 import com.dalima.paisawise.viewmodel.HomeViewModel
 import com.dalima.paisawise.viewmodel.HomeViewModelFactory
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(
@@ -41,7 +38,7 @@ fun MainScreen(
     val systemUiController = rememberSystemUiController()
     val categoryViewModel: CategoryViewModel = viewModel()
     // Dialog state
-    var showDialog by remember{mutableStateOf(false)}
+    var showDialog by remember { mutableStateOf(false) }
     val homeViewModel: HomeViewModel = viewModel(
         factory = HomeViewModelFactory(expenseDao)
     )
@@ -78,18 +75,22 @@ fun MainScreen(
                                 popUpTo("HomeScreen") { inclusive = true }
                                 launchSingleTop = true
                             }
+
                             1 -> navController.navigate("TransactionScreen") {
                                 popUpTo("HomeScreen")
                                 launchSingleTop = true
                             }
+
                             2 -> navController.navigate("AnalysisScreen") {
                                 popUpTo("HomeScreen")
                                 launchSingleTop = true
                             }
+
                             3 -> navController.navigate("ProfileScreen") {
                                 popUpTo("HomeScreen")
                                 launchSingleTop = true
                             }
+
                             4 -> {
                                 showDialog = true // Show dialog instead of navigating
                             }
@@ -111,7 +112,31 @@ fun MainScreen(
                         TransactionScreen(navController = navController, expenseDao = expenseDao)
                     }
                     composable("AnalysisScreen") {
-                        AnalysisScreenRoute(expenseDao = expenseDao)
+                        val uiState by homeViewModel.uiState.observeAsState(HomeUIState.NoExpenses)
+                        val categoryExpenses by homeViewModel.expensesByCategory.observeAsState(
+                            initial = emptyMap()
+                        )
+                        when (uiState) {
+                            is HomeUIState.HasExpenses -> {
+                                val state = uiState as HomeUIState.HasExpenses
+                                AnalysisScreen(
+                                    totalExpense = state.totalAmount,
+                                    expensesByType = categoryExpenses,
+                                    onGenerateReportClick = {
+
+                                    }
+                                )
+                            }
+
+                            is HomeUIState.NoExpenses -> {
+                                AnalysisScreen(
+                                    totalExpense = 0.0,
+                                    expensesByType = emptyMap(),
+                                    onGenerateReportClick = { }
+                                )
+                            }
+                        }
+
                     }
                     composable("ProfileScreen") {
                         ProfileScreen()
