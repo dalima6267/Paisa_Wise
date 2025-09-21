@@ -1,4 +1,5 @@
 package com.dalima.paisawise
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -39,6 +40,8 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.window.Dialog
@@ -332,14 +335,14 @@ fun ExpenseLayout( navController: NavController,
 @Composable
 fun QuickActionButton(
     title: String,
-    iconRes: Int,
+    @DrawableRes iconRes: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
         shape = RoundedCornerShape(30.dp),
-        backgroundColor =ButtonGreen ,
         elevation = 2.dp,
+        backgroundColor = Color.Transparent,
         modifier = modifier
             .height(90.dp)
             .shadow(
@@ -349,22 +352,37 @@ fun QuickActionButton(
             )
             .clickable { onClick() }
     ) {
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxSize()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF2FB771),
+                            Color(0xFF008E6B)
+                        )
+                    ),
+                    shape = RoundedCornerShape(30.dp)
+                )
         ) {
-            Icon(
-                painter = painterResource(id = iconRes),
-                contentDescription = title,
-                tint = Color.White,
-                modifier = Modifier.size(44.dp)
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(title, fontSize = 16.sp, color = Color.White)
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Image(
+                    painter = painterResource(id = iconRes),
+                    contentDescription = title,
+                    modifier = Modifier.size(44.dp),
+                    colorFilter = ColorFilter.tint(Color.White) // 🔹 behaves like Icon tint
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(title, fontSize = 16.sp, color = Color.White)
+            }
         }
     }
 }
+
 
 @Composable
 fun TransactionItemCard(expense: Expense) {
@@ -377,10 +395,9 @@ fun TransactionItemCard(expense: Expense) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
+            Image(
                 painter = painterResource(id = expense.categoryIconRes),
-                contentDescription = null,
-                tint = Color.Unspecified,
+                contentDescription = expense.category,
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -397,6 +414,7 @@ fun TransactionItemCard(expense: Expense) {
         )
     }
 }
+
 @Composable
 fun AddExpenseDialog(
     categories: List<Category>,
