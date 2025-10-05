@@ -1,4 +1,5 @@
 package com.dalima.paisawise.navigatoon
+import androidx.compose.foundation.Image
 import com.dalima.paisawise.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -35,12 +36,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
+import com.dalima.paisawise.ui.theme.DarkerPuple
 
 @Composable
 fun TopBarWithMonthPicker(
     modifier: Modifier = Modifier,
     onNotificationClick: () -> Unit = {},
-    onMonthSelected: (String) -> Unit = {}
+    onMonthSelected: (String) -> Unit = {},
+    onProfileClick: () -> Unit = {}
 ) {
     val currentMonth = remember {
         SimpleDateFormat("MMMM", Locale.getDefault()).format(Date())
@@ -60,18 +63,18 @@ fun TopBarWithMonthPicker(
     ) {
         // Left: Logo
         Row(
-            modifier = Modifier
-                .padding(start = 16.dp)
-                .size(36.dp)
-                .clip(CircleShape)
-                .border(1.dp, Color(0xFF47A671), CircleShape),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "Spli",
-                color = Color(0xFF47A671),
-                fontWeight = FontWeight.Bold
+            Image(
+                painter = painterResource(R.drawable.profilelast),
+                contentDescription = "Profile",
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .border(1.dp, Color(0xFF47A671), CircleShape)
+                    .clickable{onProfileClick()}
             )
         }
 

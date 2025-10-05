@@ -24,3 +24,5 @@ val DarkerPuple = Color(0xFFAD00FF)
 val Lavender = Color(0xFFE3F2FD)
 val Cardgreen = Color(0xFFa6f1a6)
 val Lightred = Color(0xFFf1807e)
+val dialougebackground = Color(0xFFFFEAD3)
+

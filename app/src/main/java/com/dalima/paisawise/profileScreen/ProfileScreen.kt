@@ -11,36 +11,47 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.dalima.paisawise.MainActivity
 import com.dalima.paisawise.R
 import com.dalima.paisawise.ui.theme.DarkerPuple
+import com.dalima.paisawise.viewmodel.AuthViewModel
 import com.dalima.paisawise.viewmodel.CurrencyViewModel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
 @Composable
-fun ProfileScreen(currencyViewModel: CurrencyViewModel = viewModel()) {
+fun ProfileScreen(  isDarkMode: Boolean,
+                    onDarkModeChange: (Boolean) -> Unit,
+                    currencyViewModel: CurrencyViewModel = viewModel(),
+                    authViewModel: AuthViewModel = viewModel()
+) {
+    val userProfile by authViewModel.userProfile.observeAsState()
+
+    LaunchedEffect(Unit) {
+        authViewModel.fetchUserProfile()
+    }
+
+    val userName = userProfile?.name ?: "No Name"
+    val userEmail = userProfile?.email ?: "No Email"
+
     var expanded by remember { mutableStateOf(false) }
     val currencyMap = currencyViewModel.currencies
     val selectedCode = currencyViewModel.selectedCurrency
@@ -49,13 +60,28 @@ fun ProfileScreen(currencyViewModel: CurrencyViewModel = viewModel()) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val coroutineScope = rememberCoroutineScope()
     var showLogoutSheet by remember { mutableStateOf(false) }
+    var showExportSheet by remember { mutableStateOf(false) }
+
     if (showLogoutSheet) {
         ModalBottomSheet(
             onDismissRequest = {
                 coroutineScope.launch { sheetState.hide() }
                 showLogoutSheet = false
             },
-            sheetState = sheetState
+            sheetState = sheetState,
+            containerColor = Color(0xFFFDF1E7),
+
+            dragHandle = {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 8.dp, bottom = 8.dp)
+                        .width(40.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(Color(0xFFD0AEEB))
+
+                )
+            }
         ) {
             LogoutBottomSheet(
                 onDismiss = {
@@ -72,12 +98,55 @@ fun ProfileScreen(currencyViewModel: CurrencyViewModel = viewModel()) {
             )
         }
     }
+    if(showExportSheet){
+        ModalBottomSheet(
+            onDismissRequest={
+                coroutineScope.launch { sheetState.hide() }
+                showExportSheet = false
+            },
+            sheetState = sheetState,
+            containerColor = Color(0xFFFDF1E7),
+            dragHandle = {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 8.dp, bottom = 8.dp)
+                        .width(40.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(Color(0xFFD0AEEB))
+                )
+            }
+        ){
+            ExportBottomSheet(
+                onDismiss = {
+                    coroutineScope.launch { sheetState.hide() }
+                    showExportSheet = false
+                },
+                onExport = { selectedOption ->
+                    coroutineScope.launch { sheetState.hide() }
+                    showExportSheet = false
+
+                    when (selectedOption) {
+                        "CSV" -> {
+                            println("Exporting as CSV...")
+                        }
+                        "PDF" -> {
+                            println("Exporting as PDF...")
+                        }
+                        "Excel" -> {
+                            println("Exporting as Excel...")
+                        }
+                    }
+                }
+            )
+        }
+
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Header
         Spacer(modifier = Modifier.height(30.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -95,8 +164,8 @@ fun ProfileScreen(currencyViewModel: CurrencyViewModel = viewModel()) {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text("Dalima Sahu", style = MaterialTheme.typography.h6)
-                    Text("dalima8625@gmail.com", style = MaterialTheme.typography.body2)
+                    Text(text = userName, style = MaterialTheme.typography.h6)
+                    Text(text = userEmail, style = MaterialTheme.typography.body2)
                 }
             }
             IconButton(onClick = { /* Navigate to Edit Profile */ }) {
@@ -115,7 +184,9 @@ fun ProfileScreen(currencyViewModel: CurrencyViewModel = viewModel()) {
             title = "Edit Profile",
             value = "",
             showArrow = true,
-            onClick = { /* Handle edit profile */ }
+            onClick = {
+
+            }
         )
 
         ProfileItem(
@@ -145,7 +216,10 @@ fun ProfileScreen(currencyViewModel: CurrencyViewModel = viewModel()) {
             title = "Export Data",
             value = "",
             showArrow = true,
-            onClick = {     }
+            onClick = {
+                showExportSheet = true
+                coroutineScope.launch { sheetState.show() }
+            }
         )
         ProfileItem(
             icon = R.drawable.helpcentre,
@@ -179,12 +253,11 @@ fun ProfileScreen(currencyViewModel: CurrencyViewModel = viewModel()) {
                 } }
         )
 
-        var isDarkMode by remember { mutableStateOf(true) }
         ProfileSwitchItem(
             icon = R.drawable.darkmode,
             title = "Dark Mode",
             isChecked = isDarkMode,
-            onCheckedChange = { isDarkMode = it }
+            onCheckedChange = { onDarkModeChange(it) }
         )
 
         var isPinEnabled by remember { mutableStateOf(true) }
@@ -211,73 +284,66 @@ fun LogoutBottomSheet(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentHeight()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                .background(MaterialTheme.colors.surface)
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+
+        // Title
+        Text(
+            text = "Logout?",
+            style = MaterialTheme.typography.h6.copy(
+                color = Color.Black
+            )
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Subtitle
+        Text(
+            text = "Are you sure do you wanna logout?",
+            style = MaterialTheme.typography.body2.copy(
+                color = Color.Gray
+            )
+        )
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        // Buttons Row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            // Top Divider
-            Box(
+            // Cancel Button
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color(0xFFD6D6D6) // gray
+                ),
                 modifier = Modifier
-                    .width(40.dp)
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(MaterialTheme.colors.primary.copy(alpha = 0.5f))
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "Logout?",
-                style = MaterialTheme.typography.h6
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Are you sure you want to logout?",
-                style = MaterialTheme.typography.body2
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                    .weight(1f)
+                    .height(48.dp)
             ) {
-                Button(
-                    onClick = onDismiss,
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = Color.LightGray
-                    )
-                ) {
-                    Text("Cancel")
-                }
+                Text("Cancel", color = Color.Black)
+            }
 
-                Button(
-                    onClick = onConfirm,
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = Color(0xFFE57373) // Red color
-                    )
-                ) {
-                    Text("Yes, Logout")
-                }
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Confirm Button
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color(0xFFE57373)
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp)
+            ) {
+                Text("Yes, Logout", color = Color.White)
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ProfileScreenPreview() {
-    ProfileScreen()
 }

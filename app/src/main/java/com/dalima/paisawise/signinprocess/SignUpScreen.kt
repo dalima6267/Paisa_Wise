@@ -309,7 +309,7 @@ fun SignUpScreen(    onSwitchClick: () -> Unit,
                     }
                     else -> {
                         // All fields valid
-                        viewModel.signIn(email, password)
+                        viewModel.signUp(name, email, password)
                     }
                 }
             },

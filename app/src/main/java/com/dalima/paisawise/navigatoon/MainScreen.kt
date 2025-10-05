@@ -1,9 +1,11 @@
 package com.dalima.paisawise.navigatoon
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -12,6 +14,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.dalima.paisawise.*
 import com.dalima.paisawise.category.ExpenseCategoryScreen
@@ -30,6 +33,9 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 fun MainScreen(
     viewModel: CategoryViewModel = viewModel()
 ) {
+    var isDarkMode by remember { mutableStateOf(false) }
+
+    AppTheme(darkTheme = isDarkMode) {
     val navController = rememberNavController()
     val context = LocalContext.current
     val expenseDao = remember { AppDatabase.getDatabase(context).expenseDao() }
@@ -37,11 +43,15 @@ fun MainScreen(
     val selectedTags by viewModel.selectedTags.collectAsState()
     val systemUiController = rememberSystemUiController()
     val categoryViewModel: CategoryViewModel = viewModel()
-    // Dialog state
     var showDialog by remember { mutableStateOf(false) }
     val homeViewModel: HomeViewModel = viewModel(
         factory = HomeViewModelFactory(expenseDao)
     )
+
+    // Track current route
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
     // Set status bar
     SideEffect {
         systemUiController.setStatusBarColor(
@@ -51,7 +61,8 @@ fun MainScreen(
     }
 
     Column {
-        if (selectedIndex != 3) {
+        // Show TopBar only when not in ProfileScreen
+        if (currentRoute != "ProfileScreen") {
             Box(
                 modifier = Modifier
                     .padding(WindowInsets.statusBars.asPaddingValues())
@@ -59,7 +70,10 @@ fun MainScreen(
             ) {
                 TopBarWithMonthPicker(
                     onNotificationClick = { /* TODO */ },
-                    onMonthSelected = { month -> /* TODO */ }
+                    onMonthSelected = { month -> /* TODO */ },
+                    onProfileClick = {
+                        navController.navigate("ProfileScreen")
+                    }
                 )
             }
         }
@@ -122,9 +136,7 @@ fun MainScreen(
                                 AnalysisScreen(
                                     totalExpense = state.totalAmount,
                                     expensesByType = categoryExpenses,
-                                    onGenerateReportClick = {
-
-                                    }
+                                    onGenerateReportClick = {}
                                 )
                             }
 
@@ -132,16 +144,19 @@ fun MainScreen(
                                 AnalysisScreen(
                                     totalExpense = 0.0,
                                     expensesByType = emptyMap(),
-                                    onGenerateReportClick = { }
+                                    onGenerateReportClick = {}
                                 )
                             }
                         }
-
                     }
                     composable("ProfileScreen") {
-                        ProfileScreen()
+
+                        ProfileScreen(
+                            isDarkMode = isDarkMode,
+                            onDarkModeChange = { isDarkMode = it }
+                        )
+
                     }
-                    // Removed "AddScreen" navigation since it's now a dialog
                     composable("ExpenseCategoryScreen") {
                         ExpenseCategoryScreen(navController)
                     }
@@ -157,13 +172,13 @@ fun MainScreen(
         var selectedCategoryIcon by remember { mutableStateOf<Int?>(null) }
 
         AddExpenseDialog(
-            categories = categoryViewModel.categories, // List<Category>
+            categories = categoryViewModel.categories,
             onDismiss = { showDialog = false },
             onSave = { categoryName, iconRes, title, amount, date, description, invoice ->
                 homeViewModel.addExpense(
                     Expense(
                         category = categoryName,
-                        categoryIconRes = iconRes, // store icon resource
+                        categoryIconRes = iconRes,
                         title = title,
                         amount = amount.toDoubleOrNull() ?: 0.0,
                         date = date,
@@ -174,7 +189,6 @@ fun MainScreen(
                 showDialog = false
             }
         )
-
 
         if (showCategoryPicker) {
             androidx.compose.ui.window.Dialog(onDismissRequest = { showCategoryPicker = false }) {
@@ -196,4 +210,5 @@ fun MainScreen(
             }
         }
     }
+}
 }
