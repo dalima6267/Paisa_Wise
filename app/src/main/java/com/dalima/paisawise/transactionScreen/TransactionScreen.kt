@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
+import com.dalima.paisawise.AnalysisScreen
+import com.dalima.paisawise.db.HomeUIState
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.LineData
@@ -40,11 +42,11 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-
 @Composable
 fun TransactionScreen(navController: NavHostController, expenseDao: ExpenseDao) {
     val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(expenseDao))
     val transactions by viewModel.allExpenses.observeAsState(emptyList())
+    val uiState by viewModel.uiState.observeAsState(HomeUIState.NoExpenses)
 
     var selectedTab by remember { mutableStateOf("Day") }
     val tabs = listOf("Day", "Week", "Month", "Year")
@@ -68,13 +70,26 @@ fun TransactionScreen(navController: NavHostController, expenseDao: ExpenseDao) 
                     .padding(top = 12.dp)
                     .align(Alignment.CenterHorizontally)
             ) {
-                Text(
-                    text = "₹$balance",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color.Black,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
+                when (uiState) {
+                    is HomeUIState.HasExpenses -> {
+                        val state = uiState as HomeUIState.HasExpenses
+                        Text(
+                            text = "₹${state.totalAmount}",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = Color.Black,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
+
+                    is HomeUIState.NoExpenses -> {
+                        AnalysisScreen(
+                            totalExpense = 0.0,
+                            expensesByType = emptyMap(),
+                            onGenerateReportClick = { }
+                        )
+                    }
+                }
             }
         LineChartView(transactions, selectedTab, selectedMonth)
 
@@ -189,14 +204,22 @@ fun LineChartView(transactions: List<Expense>, selectedTab:String, selectedMonth
                 description.isEnabled = false
                 legend.isEnabled = false
                 axisRight.isEnabled = false
-                axisLeft.setDrawGridLines(false)
-                axisLeft.setDrawAxisLine(false)
-                axisLeft.setDrawLabels(false)
-                xAxis.position = XAxis.XAxisPosition.BOTTOM
-                xAxis.setDrawGridLines(false)
-                xAxis.setDrawAxisLine(false)
-                xAxis.granularity = 1f
-                xAxis.isGranularityEnabled = true
+                axisLeft.apply {
+                    setDrawGridLines(false)
+                    setDrawAxisLine(false)
+                    setDrawLabels(false)
+                }
+                xAxis.apply {
+                    position = XAxis.XAxisPosition.BOTTOM
+                    setDrawGridLines(false)
+                    setDrawAxisLine(false)
+                    granularity = 1f
+                    isGranularityEnabled = true
+                    textColor = android.graphics.Color.GRAY
+                }
+                setTouchEnabled(true)
+                isDragEnabled = true
+                setScaleEnabled(false)
             }
 
         },
@@ -230,7 +253,7 @@ fun LineChartView(transactions: List<Expense>, selectedTab:String, selectedMonth
 
                 else -> emptyMap()
             }
-            // ✅ Convert grouped data to entries
+            // Convert grouped data to entries
             val labels = grouped.keys.toList()
             // Convert transactions into Entry list
             val entries = labels.mapIndexed { index, key ->

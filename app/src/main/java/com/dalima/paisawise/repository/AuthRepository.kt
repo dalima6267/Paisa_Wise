@@ -15,8 +15,15 @@ class AuthRepository(
         return try {
             val result = auth.createUserWithEmailAndPassword(email, password).await()
             val uid = result.user?.uid ?: return Result.failure(Exception("No UID"))
+
+            val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                .setDisplayName(name)
+                .build()
+            result.user?.updateProfile(profileUpdates)?.await()
+
             val user = User(uid, name, email)
             firestore.collection("users").document(uid).set(user).await()
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -46,6 +53,14 @@ class AuthRepository(
 
     fun signOut() {
         auth.signOut()
+    }
+    suspend fun getUserProfile(uid: String): User? {
+        return try {
+            firestore.collection("users").document(uid).get().await()
+                .toObject(User::class.java)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     fun getCurrentUser() = auth.currentUser
