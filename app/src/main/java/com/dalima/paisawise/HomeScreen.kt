@@ -56,10 +56,23 @@ import java.util.Locale
 
 
 @Composable
-fun HomeScreen(navController: NavHostController, expenseDao: ExpenseDao) {
+fun HomeScreen(navController: NavHostController, expenseDao: ExpenseDao, selectedMonth: String) {
     val homeViewModel: HomeViewModel = viewModel(
         factory = HomeViewModelFactory(expenseDao)
     )
+    val allExpenses by homeViewModel.allExpenses.observeAsState(emptyList())
+    val monthFilteredExpenses= remember(selectedMonth, allExpenses){
+        allExpenses.filter { expense->
+            try {
+                val date = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(expense.date)
+                val monthName = SimpleDateFormat("MMMM", Locale.getDefault()).format(date ?: Date())
+                monthName == selectedMonth
+            } catch (e: Exception) {
+                false
+            }
+        }
+    }
+
     val categoryViewModel: CategoryViewModel = viewModel()
 
     val context = LocalContext.current
@@ -70,7 +83,15 @@ fun HomeScreen(navController: NavHostController, expenseDao: ExpenseDao) {
     val transactions by homeViewModel.allExpenses.observeAsState(emptyList())
 
     // Manually observe LiveData
-    val uiState by homeViewModel.uiState.observeAsState(HomeUIState.NoExpenses)
+    val uiState by remember(monthFilteredExpenses) {
+        mutableStateOf(
+            if (monthFilteredExpenses.isEmpty()) {
+                HomeUIState.NoExpenses
+            } else {
+                homeViewModel.getUiStateFromExpenses(monthFilteredExpenses, selectedMonth)
+            }
+        )
+    }
 
 
     val categories by categoryViewModel.selectedTags.collectAsState()

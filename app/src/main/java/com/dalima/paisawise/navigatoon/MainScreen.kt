@@ -28,13 +28,20 @@ import com.dalima.paisawise.viewmodel.CategoryViewModel
 import com.dalima.paisawise.viewmodel.HomeViewModel
 import com.dalima.paisawise.viewmodel.HomeViewModelFactory
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun MainScreen(
     viewModel: CategoryViewModel = viewModel()
 ) {
     var isDarkMode by remember { mutableStateOf(false) }
-
+    var selectedMonth by rememberSaveable{
+        mutableStateOf(
+            SimpleDateFormat("MMMM", Locale.getDefault()).format(Date())
+        )
+    }
     AppTheme(darkTheme = isDarkMode) {
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -70,7 +77,10 @@ fun MainScreen(
             ) {
                 TopBarWithMonthPicker(
                     onNotificationClick = { /* TODO */ },
-                    onMonthSelected = { month -> /* TODO */ },
+                    onMonthSelected = { month ->
+                        selectedMonth = month
+                        homeViewModel.setSelectedMonth(month)
+                    },
                     onProfileClick = {
                         navController.navigate("ProfileScreen")
                     }
@@ -120,10 +130,10 @@ fun MainScreen(
                     startDestination = "HomeScreen"
                 ) {
                     composable("HomeScreen") {
-                        HomeScreen(navController = navController, expenseDao = expenseDao)
+                        HomeScreen(navController = navController, expenseDao = expenseDao, selectedMonth = selectedMonth)
                     }
                     composable("TransactionScreen") {
-                        TransactionScreen(navController = navController, expenseDao = expenseDao)
+                        TransactionScreen(navController = navController, expenseDao = expenseDao, selectedMonth = selectedMonth)
                     }
                     composable("AnalysisScreen") {
                         val uiState by homeViewModel.uiState.observeAsState(HomeUIState.NoExpenses)
@@ -136,7 +146,8 @@ fun MainScreen(
                                 AnalysisScreen(
                                     totalExpense = state.totalAmount,
                                     expensesByType = categoryExpenses,
-                                    onGenerateReportClick = {}
+                                    onGenerateReportClick = {},
+                                    selectedMonth = selectedMonth
                                 )
                             }
 
@@ -144,7 +155,8 @@ fun MainScreen(
                                 AnalysisScreen(
                                     totalExpense = 0.0,
                                     expensesByType = emptyMap(),
-                                    onGenerateReportClick = {}
+                                    onGenerateReportClick = {},
+                                    selectedMonth = selectedMonth
                                 )
                             }
                         }

@@ -43,7 +43,7 @@ import java.util.Calendar
 import java.util.Locale
 
 @Composable
-fun TransactionScreen(navController: NavHostController, expenseDao: ExpenseDao) {
+fun TransactionScreen(navController: NavHostController, expenseDao: ExpenseDao,selectedMonth:String) {
     val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(expenseDao))
     val transactions by viewModel.allExpenses.observeAsState(emptyList())
     val uiState by viewModel.uiState.observeAsState(HomeUIState.NoExpenses)
@@ -86,7 +86,8 @@ fun TransactionScreen(navController: NavHostController, expenseDao: ExpenseDao) 
                         AnalysisScreen(
                             totalExpense = 0.0,
                             expensesByType = emptyMap(),
-                            onGenerateReportClick = { }
+                            onGenerateReportClick = { },
+                            selectedMonth = selectedMonth
                         )
                     }
                 }
