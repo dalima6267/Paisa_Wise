@@ -74,7 +74,6 @@ class HomeViewModel(private val expenseDao: ExpenseDao) : ViewModel() {
 
         val todayDate = todayFormat.format(Date())
 
-        // Parse selected month (e.g., "November") into calendar
         val selectedMonthCalendar = Calendar.getInstance().apply {
             time = Date()
             val parsedMonth = monthNameFormat.parse(selectedMonth)
@@ -87,7 +86,6 @@ class HomeViewModel(private val expenseDao: ExpenseDao) : ViewModel() {
         val selectedMonthNum = selectedMonthCalendar.get(Calendar.MONTH)
         val selectedYear = selectedMonthCalendar.get(Calendar.YEAR)
 
-        // ✅ 1. Filter current month
         val currentMonthExpenses = expenses.filter {
             try {
                 val parsedDate = sdf.parse(it.date)
@@ -98,7 +96,6 @@ class HomeViewModel(private val expenseDao: ExpenseDao) : ViewModel() {
             }
         }
 
-        // ✅ 2. Filter last month (handles year transitions properly)
         val lastMonthCalendar = (selectedMonthCalendar.clone() as Calendar).apply {
             add(Calendar.MONTH, -1)
         }
@@ -115,7 +112,6 @@ class HomeViewModel(private val expenseDao: ExpenseDao) : ViewModel() {
             }
         }
 
-        // ✅ 3. Filter today’s expenses (ensure same string pattern)
         val todayExpenses = currentMonthExpenses.filter {
             try {
                 val parsedDate = sdf.parse(it.date)
@@ -125,12 +121,10 @@ class HomeViewModel(private val expenseDao: ExpenseDao) : ViewModel() {
             }
         }
 
-        // ✅ 4. Sum amounts
         val totalAmount = currentMonthExpenses.sumOf { it.amount }
         val todayAmount = todayExpenses.sumOf { it.amount }
         val lastTotal = lastMonthExpenses.sumOf { it.amount }
 
-        // ✅ 5. Comparison text
         val comparisonText = when {
             lastTotal == 0.0 && totalAmount > 0 -> "Compared to last month: +100%"
             lastTotal == 0.0 && totalAmount == 0.0 -> "No comparison available"
@@ -142,7 +136,6 @@ class HomeViewModel(private val expenseDao: ExpenseDao) : ViewModel() {
             }
         }
 
-        // ✅ 6. Highest category
         val highestCategory = if (currentMonthExpenses.isNotEmpty()) {
             currentMonthExpenses
                 .groupBy { it.category }
