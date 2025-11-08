@@ -12,99 +12,158 @@ class HomeViewModel(private val expenseDao: ExpenseDao) : ViewModel() {
 
     val allExpenses: LiveData<List<Expense>> = expenseDao.getAllExpenses()
 
-    val uiState: LiveData<HomeUIState> = allExpenses.map { expenses ->
-        if (expenses.isEmpty()) {
-            HomeUIState.NoExpenses
-        } else {
-            calculateMonthlyExpenseState(expenses)
+    private val selectedMonth = MutableLiveData(getCurrentMonthName())
+
+    val uiState: LiveData<HomeUIState> = MediatorLiveData<HomeUIState>().apply {
+        fun updateState(expenses: List<Expense>?, month: String?) {
+            value = if (expenses.isNullOrEmpty()) {
+                HomeUIState.NoExpenses
+            } else {
+                getUiStateFromExpenses(expenses, month ?: getCurrentMonthName())
+            }
+        }
+
+        addSource(allExpenses) { expenses ->
+            updateState(expenses, selectedMonth.value)
+        }
+
+        addSource(selectedMonth) { month ->
+            updateState(allExpenses.value, month)
         }
     }
-    val expensesByCategory: LiveData<Map<String, Double>> = allExpenses.map { expenses ->
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val monthFormat = SimpleDateFormat("MM-yyyy", Locale.getDefault())
-        val currentMonthKey = monthFormat.format(Date())
 
+    val expensesByCategory: LiveData<Map<String, Double>> = MediatorLiveData<Map<String, Double>>().apply {
+        fun updateCategory(expenses: List<Expense>?, month: String?) {
+            value = expenses
+                ?.let { filterExpensesByMonth(it, month ?: getCurrentMonthName()) }
+                ?.groupBy { it.category }
+                ?.mapValues { entry -> entry.value.sumOf { exp -> exp.amount } }
+                ?: emptyMap()
+        }
+
+        addSource(allExpenses) { expenses ->
+            updateCategory(expenses, selectedMonth.value)
+        }
+
+        addSource(selectedMonth) { month ->
+            updateCategory(allExpenses.value, month)
+        }
+    }
+
+    fun setSelectedMonth(month: String) {
+        selectedMonth.value = month
+    }
+
+    private fun filterExpensesByMonth(expenses: List<Expense>, selectedMonth: String): List<Expense> {
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val monthNameFormat = SimpleDateFormat("MMMM", Locale.getDefault())
+        return expenses.filter {
+            try {
+                val date = sdf.parse(it.date)
+                date != null && monthNameFormat.format(date).equals(selectedMonth, ignoreCase = true)
+            } catch (_: Exception) {
+                false
+            }
+        }
+    }
+
+    fun getUiStateFromExpenses(expenses: List<Expense>, selectedMonth: String): HomeUIState.HasExpenses {
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val monthNameFormat = SimpleDateFormat("MMMM", Locale.getDefault())
+        val todayFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
+        val todayDate = todayFormat.format(Date())
+
+        // Parse selected month (e.g., "November") into calendar
+        val selectedMonthCalendar = Calendar.getInstance().apply {
+            time = Date()
+            val parsedMonth = monthNameFormat.parse(selectedMonth)
+            if (parsedMonth != null) {
+                val tempCal = Calendar.getInstance().apply { time = parsedMonth }
+                set(Calendar.MONTH, tempCal.get(Calendar.MONTH))
+            }
+        }
+
+        val selectedMonthNum = selectedMonthCalendar.get(Calendar.MONTH)
+        val selectedYear = selectedMonthCalendar.get(Calendar.YEAR)
+
+        // ✅ 1. Filter current month
         val currentMonthExpenses = expenses.filter {
             try {
                 val parsedDate = sdf.parse(it.date)
-                parsedDate != null && monthFormat.format(parsedDate) == currentMonthKey
-            } catch (e: Exception) {
+                val cal = Calendar.getInstance().apply { time = parsedDate!! }
+                cal.get(Calendar.MONTH) == selectedMonthNum && cal.get(Calendar.YEAR) == selectedYear
+            } catch (_: Exception) {
                 false
             }
         }
 
-        currentMonthExpenses.groupBy { it.category }
-            .mapValues { it.value.sumOf { expense -> expense.amount } }
-    }
-
-    private fun calculateMonthlyExpenseState(expenses: List<Expense>): HomeUIState.HasExpenses {
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val monthFormat = SimpleDateFormat("MM-yyyy", Locale.getDefault())
-        val dayFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val currentMonthName = SimpleDateFormat("MMMM", Locale.getDefault()).format(Date())
-        val todayDate = dayFormat.format(Date())
-        val currentMonthKey = monthFormat.format(Date())
-        val lastMonthCalendar = Calendar.getInstance().apply { add(Calendar.MONTH, -1) }
-        val lastMonthKey = monthFormat.format(lastMonthCalendar.time)
-
-        val currentMonthExpenses = expenses.filter {
-            try {
-                val parsedDate = sdf.parse(it.date)
-                parsedDate != null && monthFormat.format(parsedDate) == currentMonthKey
-            } catch (e: Exception) {
-                false
-            }
+        // ✅ 2. Filter last month (handles year transitions properly)
+        val lastMonthCalendar = (selectedMonthCalendar.clone() as Calendar).apply {
+            add(Calendar.MONTH, -1)
         }
+        val lastMonthNum = lastMonthCalendar.get(Calendar.MONTH)
+        val lastMonthYear = lastMonthCalendar.get(Calendar.YEAR)
 
         val lastMonthExpenses = expenses.filter {
             try {
                 val parsedDate = sdf.parse(it.date)
-                parsedDate != null && monthFormat.format(parsedDate) == lastMonthKey
-            } catch (e: Exception) {
+                val cal = Calendar.getInstance().apply { time = parsedDate!! }
+                cal.get(Calendar.MONTH) == lastMonthNum && cal.get(Calendar.YEAR) == lastMonthYear
+            } catch (_: Exception) {
                 false
             }
         }
-        val todayExpenses = expenses.filter {
+
+        // ✅ 3. Filter today’s expenses (ensure same string pattern)
+        val todayExpenses = currentMonthExpenses.filter {
             try {
                 val parsedDate = sdf.parse(it.date)
-                parsedDate != null && dayFormat.format(parsedDate) == todayDate
-            } catch (e: Exception) {
+                todayFormat.format(parsedDate!!) == todayDate
+            } catch (_: Exception) {
                 false
             }
         }
-        val currentTotal = currentMonthExpenses.sumOf { it.amount }
+
+        // ✅ 4. Sum amounts
+        val totalAmount = currentMonthExpenses.sumOf { it.amount }
+        val todayAmount = todayExpenses.sumOf { it.amount }
         val lastTotal = lastMonthExpenses.sumOf { it.amount }
-        val todayTotal = todayExpenses.sumOf { it.amount }
+
+        // ✅ 5. Comparison text
         val comparisonText = when {
-            lastTotal == 0.0 && currentTotal > 0 -> "Compared to last month: +100%"
-            lastTotal == 0.0 && currentTotal == 0.0 -> "No comparison available"
+            lastTotal == 0.0 && totalAmount > 0 -> "Compared to last month: +100%"
+            lastTotal == 0.0 && totalAmount == 0.0 -> "No comparison available"
             else -> {
-                val diff = currentTotal - lastTotal
+                val diff = totalAmount - lastTotal
                 val percent = (diff / lastTotal) * 100
-                if (percent >= 0)
-                    "Compared to last month: +${"%.1f".format(percent)}%"
-                else
-                    "Compared to last month: ${"%.1f".format(percent)}%"
+                if (percent >= 0) "Compared to last month: +${"%.1f".format(percent)}%"
+                else "Compared to last month: ${"%.1f".format(percent)}%"
             }
         }
 
-        // (Optional) Highest category
-        val highestCategory = currentMonthExpenses
-            .groupBy { it.category }
-            .mapValues { it.value.sumOf { exp -> exp.amount } }
-            .maxByOrNull { it.value }?.key ?: "N/A"
+        // ✅ 6. Highest category
+        val highestCategory = if (currentMonthExpenses.isNotEmpty()) {
+            currentMonthExpenses
+                .groupBy { it.category }
+                .mapValues { it.value.sumOf { exp -> exp.amount } }
+                .maxByOrNull { it.value }?.key ?: "N/A"
+        } else "N/A"
 
         return HomeUIState.HasExpenses(
-            totalAmount = currentTotal,
+            totalAmount = totalAmount,
             lastMonthAmount = lastTotal,
-            todayAmount = todayTotal,
+            todayAmount = todayAmount,
             comparisonText = comparisonText,
             highestCategory = highestCategory,
-            currentMonthName = currentMonthName
+            currentMonthName = selectedMonth
         )
-
     }
 
+
+    private fun getCurrentMonthName(): String {
+        return SimpleDateFormat("MMMM", Locale.getDefault()).format(Date())
+    }
 
     fun addExpense(expense: Expense) {
         viewModelScope.launch {

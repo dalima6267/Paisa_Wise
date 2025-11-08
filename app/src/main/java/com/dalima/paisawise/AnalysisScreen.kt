@@ -26,7 +26,8 @@ import com.dalima.paisawise.ui.theme.ButtonGreen
 fun AnalysisScreen(
     totalExpense: Double,
     expensesByType: Map<String, Double>,
-    onGenerateReportClick: () -> Unit
+    onGenerateReportClick: () -> Unit,
+    selectedMonth:String,
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
