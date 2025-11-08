@@ -1,5 +1,6 @@
 package com.dalima.paisawise.transactionScreen
 
+import android.graphics.drawable.GradientDrawable
 import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,13 +34,16 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
 import com.dalima.paisawise.AnalysisScreen
 import com.dalima.paisawise.db.HomeUIState
+import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 @Composable
@@ -61,7 +65,6 @@ fun TransactionScreen(navController: NavHostController, expenseDao: ExpenseDao,s
             .fillMaxSize()
             .background(Color.White)
     ) {
-            // Balance bubble (floating)
             Card(
                 shape = RoundedCornerShape(50),
                 backgroundColor = Color.White,
@@ -73,13 +76,13 @@ fun TransactionScreen(navController: NavHostController, expenseDao: ExpenseDao,s
                 when (uiState) {
                     is HomeUIState.HasExpenses -> {
                         val state = uiState as HomeUIState.HasExpenses
-                        Text(
-                            text = "₹${state.totalAmount}",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = Color.Black,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
+//                        Text(
+//                            text = "₹${state.totalAmount}",
+//                            fontWeight = FontWeight.Bold,
+//                            fontSize = 16.sp,
+//                            color = Color.Black,
+//                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+//                        )
                     }
 
                     is HomeUIState.NoExpenses -> {
@@ -194,13 +197,14 @@ fun LineChartView(transactions: List<Expense>, selectedTab:String, selectedMonth
     AndroidView(
         modifier = Modifier
             .fillMaxWidth()
-            .height(220.dp),
+            .height(220.dp)
+            .padding(vertical = 8.dp),
         factory={context->
             LineChart(context).apply{
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
+//                layoutParams = ViewGroup.LayoutParams(
+//                    ViewGroup.LayoutParams.MATCH_PARENT,
+//                    ViewGroup.LayoutParams.MATCH_PARENT
+//                )
                 setBackgroundColor(android.graphics.Color.WHITE)
                 description.isEnabled = false
                 legend.isEnabled = false
@@ -208,82 +212,110 @@ fun LineChartView(transactions: List<Expense>, selectedTab:String, selectedMonth
                 axisLeft.apply {
                     setDrawGridLines(false)
                     setDrawAxisLine(false)
-                    setDrawLabels(false)
+                    textColor = android.graphics.Color.GRAY
+                    textSize = 10f
                 }
                 xAxis.apply {
                     position = XAxis.XAxisPosition.BOTTOM
                     setDrawGridLines(false)
                     setDrawAxisLine(false)
                     granularity = 1f
+                    textSize = 10f
                     isGranularityEnabled = true
                     textColor = android.graphics.Color.GRAY
                 }
                 setTouchEnabled(true)
                 isDragEnabled = true
                 setScaleEnabled(false)
+                animateX(1200, Easing.EaseInOutQuad)
             }
 
         },
         update = { chart ->
-            if(transactions.isEmpty()){
+            if (transactions.isEmpty()) {
                 chart.clear()
                 return@AndroidView
             }
-            val grouped= when(selectedTab){
-                "Day" -> transactions
-                    .filter { getMonth(it.date) == selectedMonth }
-                    .groupBy { it.date } // per day
+
+            // 🔹 Filter data based on selected tab and selected month
+            val filteredTransactions = when (selectedTab) {
+                "Day" -> transactions.filter { getMonth(it.date) == selectedMonth }
+                "Week" -> transactions.filter { getMonth(it.date) == selectedMonth }
+                "Month" -> transactions.filter { getYear(it.date) == getCurrentYear() }
+                "Year" -> transactions // all years
+                else -> emptyList()
+            }
+
+            val grouped = when (selectedTab) {
+                "Day" -> filteredTransactions
+                    .groupBy { it.date } // group per date
                     .mapValues { it.value.sumOf { exp -> exp.amount } }
                     .toSortedMap(compareBy { parseDate(it) })
 
-                "Week" -> transactions
-                    .filter { getMonth(it.date) == selectedMonth }
-                    .groupBy { getWeekOfMonth(it.date) }
+                "Week" -> filteredTransactions
+                    .groupBy { getWeekOfMonth(it.date) } // group by week number
                     .mapValues { it.value.sumOf { exp -> exp.amount } }
                     .toSortedMap()
 
-                "Month" -> transactions
-                    .groupBy { getMonth(it.date) }
+                "Month" -> filteredTransactions
+                    .groupBy { getMonth(it.date) } // group by each month name
                     .mapValues { it.value.sumOf { exp -> exp.amount } }
                     .toSortedMap(compareBy { monthOrder(it) })
 
-                "Year" -> transactions
-                    .groupBy { getYear(it.date) }
+                "Year" -> filteredTransactions
+                    .groupBy { getYear(it.date) } // group by year
                     .mapValues { it.value.sumOf { exp -> exp.amount } }
                     .toSortedMap()
 
                 else -> emptyMap()
             }
-            // Convert grouped data to entries
+
+            if (grouped.isEmpty()) {
+                chart.clear()
+                return@AndroidView
+            }
             val labels = grouped.keys.toList()
-            // Convert transactions into Entry list
             val entries = labels.mapIndexed { index, key ->
                 Entry(index.toFloat(), grouped[key]!!.toFloat())
-            }.toMutableList()
-
-         // Ensure at least 2 entries (otherwise cubic line won't show)
-            if (entries.size == 1) {
-                entries.add(Entry(entries[0].x + 1f, entries[0].y)) // duplicate with next x
             }
 
-            val dataSet = LineDataSet(entries, "Expenses").apply {
+
+            // 🔹 Ensure curve always draws
+            val safeEntries = if (entries.size == 1)
+                entries + Entry(entries[0].x + 1f, entries[0].y)
+            else entries
+
+            val dataSet = LineDataSet(safeEntries, "Expenses").apply {
                 color = android.graphics.Color.parseColor("#4CAF50")
-                lineWidth = 2.5f
+                lineWidth = 3f
                 setDrawCircles(true)
                 setCircleColor(android.graphics.Color.parseColor("#4CAF50"))
-                circleRadius = 4f
+                circleRadius = 5f
                 setDrawValues(false)
-                mode = LineDataSet.Mode.CUBIC_BEZIER // smooth bezier curve
-                cubicIntensity = 0.2f                // controls smoothness
+                mode = LineDataSet.Mode.CUBIC_BEZIER
+                cubicIntensity = 0.25f
                 setDrawFilled(true)
-                fillColor = android.graphics.Color.parseColor("#A5D6A7")
-                fillAlpha = 80
+                fillDrawable = GradientDrawable(
+                    GradientDrawable.Orientation.TOP_BOTTOM,
+                    intArrayOf(
+                        android.graphics.Color.parseColor("#A5D6A7"),
+                        android.graphics.Color.TRANSPARENT
+                    )
+                )
             }
 
-
             chart.data = LineData(dataSet)
-            chart.xAxis.valueFormatter =
-                com.github.mikephil.charting.formatter.IndexAxisValueFormatter(labels)
+            chart.xAxis.valueFormatter = IndexAxisValueFormatter(
+                labels.map {
+                    when (selectedTab) {
+                        "Day" -> it.substring(0, 5) // show only "dd/MM"
+                        "Week" -> it
+                        "Month" -> it
+                        "Year" -> it
+                        else -> it
+                    }
+                }
+            )
             chart.invalidate()
         }
     )
@@ -316,4 +348,7 @@ fun getWeekOfMonth(dateStr: String): String {
     val cal = Calendar.getInstance()
     cal.time = date!!
     return "Week ${cal.get(Calendar.WEEK_OF_MONTH)}"
+}
+fun getCurrentYear(): String {
+    return SimpleDateFormat("yyyy", Locale.getDefault()).format(Date())
 }
