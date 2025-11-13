@@ -146,7 +146,7 @@ fun MainScreen(
                                 AnalysisScreen(
                                     totalExpense = state.totalAmount,
                                     expensesByType = categoryExpenses,
-                                    onGenerateReportClick = {},
+                                    expenseDao = expenseDao,
                                     selectedMonth = selectedMonth
                                 )
                             }
@@ -155,7 +155,7 @@ fun MainScreen(
                                 AnalysisScreen(
                                     totalExpense = 0.0,
                                     expensesByType = emptyMap(),
-                                    onGenerateReportClick = {},
+                                    expenseDao = expenseDao,
                                     selectedMonth = selectedMonth
                                 )
                             }

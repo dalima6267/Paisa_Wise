@@ -3,11 +3,14 @@ package com.dalima.paisawise
 import android.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.ExposedDropdownMenuBox
 import androidx.compose.material.ExposedDropdownMenuDefaults
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
@@ -19,16 +22,27 @@ import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.dalima.paisawise.data.ExpenseDao
 import com.dalima.paisawise.ui.theme.ButtonGreen
+import com.dalima.paisawise.viewmodel.HomeViewModel
+import com.dalima.paisawise.viewmodel.HomeViewModelFactory
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AnalysisScreen(
     totalExpense: Double,
     expensesByType: Map<String, Double>,
-    onGenerateReportClick: () -> Unit,
+    expenseDao: ExpenseDao,
     selectedMonth:String,
 ) {
+    val homeViewModel: HomeViewModel = viewModel(
+        factory = HomeViewModelFactory(expenseDao)
+    )
+    val aiReport by homeViewModel.aiReport.observeAsState()
+//    var showDialog by remember { mutableStateOf(false) }
+    var isGenerating by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -64,7 +78,7 @@ fun AnalysisScreen(
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                     },
                     modifier = Modifier
-                        .width(120.dp)
+                        .width(140.dp)
                         .height(48.dp),
                     colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                 )
@@ -179,25 +193,72 @@ fun AnalysisScreen(
                 }
             }
         }
+Spacer(modifier = Modifier.height(16.dp))
+        val scrollState=rememberScrollState()
+        if(aiReport!=null){
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 150.dp, max = 300.dp)
+                    .background(ComposeColor(0xFFF3F7F6), RoundedCornerShape(12.dp))
+                    .verticalScroll(scrollState)
+                    .padding(horizontal=16.dp)
+
+            ){
+                Text(
+                    text=aiReport ?:"Please wait",
+                    fontSize = 14.sp,
+                    color = ComposeColor.Black
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // 🔹 Generate Report Button
+        LaunchedEffect(aiReport) {
+            if (aiReport != null) {
+                isGenerating = false
+            }
+        }
+
+
         Button(
-            onClick = onGenerateReportClick,
-            colors = ButtonDefaults.buttonColors(ButtonGreen),
-            modifier = Modifier
+            onClick = {
+                if(!isGenerating){
+                    isGenerating = true
+                    homeViewModel.generateAIReport(selectedMonth, totalExpense, expensesByType)
+                }
+            },
+            colors = ButtonDefaults.buttonColors(
+                if (isGenerating) ComposeColor.Gray else ButtonGreen
+            ),            modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 32.dp, vertical = 8.dp)
                 .height(40.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(
-                "Generate Report",
+                if (isGenerating) "Generating..." else "Generate Report",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = ComposeColor.White
             )
         }
+//        if (showDialog && aiReport != null) {
+//            AlertDialog(
+//                onDismissRequest = { showDialog = false
+//                                   isGenerating = false},
+//                title = { Text("AI Expense Report") },
+//                text = { Text(aiReport ?: "Generating report...") },
+//                confirmButton = {
+//                    TextButton(onClick = { showDialog = false
+//                    isGenerating = false}) {
+//                        Text("Close")
+//                    }
+//                }
+//            )
+//        }
     }
 }
+
+//AIzaSyBMmHPttVZQc_R4tAE86_J8M0iRJ78CvXQ

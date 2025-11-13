@@ -89,7 +89,7 @@ fun TransactionScreen(navController: NavHostController, expenseDao: ExpenseDao,s
                         AnalysisScreen(
                             totalExpense = 0.0,
                             expensesByType = emptyMap(),
-                            onGenerateReportClick = { },
+                            expenseDao = expenseDao,
                             selectedMonth = selectedMonth
                         )
                     }
@@ -253,17 +253,17 @@ fun LineChartView(transactions: List<Expense>, selectedTab:String, selectedMonth
                     .toSortedMap(compareBy { parseDate(it) })
 
                 "Week" -> filteredTransactions
-                    .groupBy { getWeekOfMonth(it.date) } // group by week number
+                    .groupBy { getWeekOfMonth(it.date) }
                     .mapValues { it.value.sumOf { exp -> exp.amount } }
                     .toSortedMap()
 
                 "Month" -> filteredTransactions
-                    .groupBy { getMonth(it.date) } // group by each month name
+                    .groupBy { getMonth(it.date) }
                     .mapValues { it.value.sumOf { exp -> exp.amount } }
                     .toSortedMap(compareBy { monthOrder(it) })
 
                 "Year" -> filteredTransactions
-                    .groupBy { getYear(it.date) } // group by year
+                    .groupBy { getYear(it.date) }
                     .mapValues { it.value.sumOf { exp -> exp.amount } }
                     .toSortedMap()
 

@@ -1,18 +1,38 @@
 package com.dalima.paisawise.viewmodel
 
 import androidx.lifecycle.*
+import androidx.lifecycle.viewModelScope
+import com.aallam.openai.api.chat.ChatCompletionRequest
+import com.aallam.openai.api.chat.ChatRole
+import com.aallam.openai.api.model.ModelId
+import com.aallam.openai.client.OpenAI
 import com.dalima.paisawise.data.Expense
 import com.dalima.paisawise.data.ExpenseDao
 import com.dalima.paisawise.db.HomeUIState
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+//import com.dalima.paisawise.BuildConfig
+import com.dalima.paisawise.data.ChatMessage
+import com.dalima.paisawise.data.ChatRequest
+import com.dalima.paisawise.data.OpenAIClient
+import io.ktor.client.request.invoke
+import kotlinx.coroutines.Dispatchers
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
+import org.json.JSONArray
+import org.json.JSONObject
 
 class HomeViewModel(private val expenseDao: ExpenseDao) : ViewModel() {
 
     val allExpenses: LiveData<List<Expense>> = expenseDao.getAllExpenses()
 
     private val selectedMonth = MutableLiveData(getCurrentMonthName())
+
+    private val _aiReport=MutableLiveData<String>()
+    val aiReport: LiveData<String> = _aiReport
 
     val uiState: LiveData<HomeUIState> = MediatorLiveData<HomeUIState>().apply {
         fun updateState(expenses: List<Expense>?, month: String?) {
@@ -169,6 +189,80 @@ class HomeViewModel(private val expenseDao: ExpenseDao) : ViewModel() {
             expenseDao.deleteExpenseById(expense.id.toInt())
         }
     }
+    fun generateAIReport(
+        month: String,
+        totalExpense: Double,
+        categoryData: Map<String, Double>
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val apiKey = "AIzaSyBMmHPttVZQc_R4tAE86_J8M0iRJ78CvXQ"
+                val model = "gemini-2.5-flash"
+                val prompt = buildString {
+                    append("Generate a professional financial summary for the month of $month.\n")
+                    append("Total expense: ₹$totalExpense\n")
+                    append("Category-wise breakdown:\n")
+                    categoryData.forEach { (category, amount) ->
+                        append("- $category: ₹$amount\n")
+                    }
+                    append(
+                        "\nProvide insights about spending habits, savings suggestions, " +
+                                "and identify areas where expenses can be reduced. Keep it short and clear."
+                    )
+                }
+
+                // ✅ Gemini expects this format
+                val json = JSONObject().apply {
+                    put(
+                        "contents", JSONArray().put(
+                            JSONObject().put(
+                                "parts", JSONArray().put(
+                                    JSONObject().put("text", prompt)
+                                )
+                            )
+                        )
+                    )
+                }
+
+                val client = OkHttpClient.Builder()
+                    .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                    .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                    .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                    .build()
+                val requestBody =
+                    RequestBody.create("application/json".toMediaTypeOrNull(), json.toString())
+
+                // ✅ Correct endpoint for AI Studio keys
+                val request = Request.Builder()
+                    .url("https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey")
+                    .post(requestBody)
+                    .build()
+
+                val response = client.newCall(request).execute()
+                val responseBody = response.body?.string()
+
+                if (!response.isSuccessful || responseBody == null) {
+                    _aiReport.postValue("Error ${response.code}: ${response.message}")
+                    return@launch
+                }
+
+                val jsonResponse = JSONObject(responseBody)
+                val text = jsonResponse
+                    .optJSONArray("candidates")
+                    ?.optJSONObject(0)
+                    ?.optJSONObject("content")
+                    ?.optJSONArray("parts")
+                    ?.optJSONObject(0)
+                    ?.optString("text") ?: "No report generated"
+
+                _aiReport.postValue(text.trim())
+            } catch (e: Exception) {
+                _aiReport.postValue("Error generating report: ${e.message}")
+            }
+        }
+    }
+
+
 }
 
 class HomeViewModelFactory(private val expenseDao: ExpenseDao) : ViewModelProvider.Factory {
