@@ -79,7 +79,8 @@ fun MainScreen(
                     onNotificationClick = { /* TODO */ },
                     onMonthSelected = { month ->
                         selectedMonth = month
-                        homeViewModel.setSelectedMonth(month)
+//                        homeViewModel.setSelectedMonth(month)
+                        homeViewModel.resetAIReport()
                     },
                     onProfileClick = {
                         navController.navigate("ProfileScreen")

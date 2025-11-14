@@ -261,8 +261,9 @@ class HomeViewModel(private val expenseDao: ExpenseDao) : ViewModel() {
             }
         }
     }
-
-
+    fun resetAIReport() {
+        _aiReport.postValue(null)   // Clear old summary
+    }
 }
 
 class HomeViewModelFactory(private val expenseDao: ExpenseDao) : ViewModelProvider.Factory {

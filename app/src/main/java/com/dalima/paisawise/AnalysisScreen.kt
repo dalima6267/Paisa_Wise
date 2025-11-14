@@ -79,7 +79,7 @@ fun AnalysisScreen(
                     },
                     modifier = Modifier
                         .width(140.dp)
-                        .height(48.dp),
+                        .height(58.dp),
                     colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                 )
                 ExposedDropdownMenu(
@@ -195,14 +195,13 @@ fun AnalysisScreen(
         }
 Spacer(modifier = Modifier.height(16.dp))
         val scrollState=rememberScrollState()
-        if(aiReport!=null){
+        if (aiReport != null && aiReport!!.isNotEmpty()){
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 150.dp, max = 300.dp)
+                    .heightIn(min = 120.dp, max = 300.dp)
                     .background(ComposeColor(0xFFF3F7F6), RoundedCornerShape(12.dp))
                     .verticalScroll(scrollState)
-                    .padding(horizontal=16.dp)
 
             ){
                 Text(
@@ -218,6 +217,16 @@ Spacer(modifier = Modifier.height(16.dp))
         LaunchedEffect(aiReport) {
             if (aiReport != null) {
                 isGenerating = false
+            }
+        }
+
+        var lastMonth by remember { mutableStateOf(selectedMonth) }
+
+        LaunchedEffect(selectedMonth) {
+            if (selectedMonth != lastMonth) {
+                lastMonth = selectedMonth
+                isGenerating = false
+                homeViewModel.resetAIReport()
             }
         }
 
