@@ -29,14 +29,13 @@ class AuthViewModel(private val repository: AuthRepository = AuthRepository()) :
         }
     }
     fun fetchUserProfile() {
-        val currentUser = repository.getCurrentUser()
-        currentUser?.uid?.let { uid ->
-            viewModelScope.launch {
-                val user = repository.getUserProfile(uid)
-                _userProfile.postValue(user)
-            }
+        val currentUser = repository.getCurrentUser() ?: return
+
+        repository.listenToUserProfile(currentUser.uid) { user ->
+            _userProfile.postValue(user)
         }
     }
+
 
     fun signInWithGoogle(credential: AuthCredential) {
         viewModelScope.launch {

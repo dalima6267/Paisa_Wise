@@ -3,6 +3,7 @@ package com.dalima.paisawise.repository
 import com.dalima.paisawise.data.User
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -16,19 +17,26 @@ class AuthRepository(
             val result = auth.createUserWithEmailAndPassword(email, password).await()
             val uid = result.user?.uid ?: return Result.failure(Exception("No UID"))
 
-            val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+            // Set Firebase Authentication displayName
+            val profileUpdates = UserProfileChangeRequest.Builder()
                 .setDisplayName(name)
                 .build()
             result.user?.updateProfile(profileUpdates)?.await()
 
+            // SAVE TO FIRESTORE
             val user = User(uid, name, email)
             firestore.collection("users").document(uid).set(user).await()
 
+            println("🔥 SAVED USER TO FIRESTORE: $user")
+
             Result.success(Unit)
+
         } catch (e: Exception) {
+            println("❌ FIRESTORE SAVE FAILED: ${e.message}")
             Result.failure(e)
         }
     }
+
 
     suspend fun signInWithEmail(email: String, password: String): Result<Unit> {
         return try {
@@ -62,6 +70,19 @@ class AuthRepository(
             null
         }
     }
+    fun listenToUserProfile(uid: String, onDataChange: (User?) -> Unit) {
+        firestore.collection("users").document(uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    onDataChange(null)
+                    return@addSnapshotListener
+                }
+
+                val user = snapshot?.toObject(User::class.java)
+                onDataChange(user)
+            }
+    }
+
 
     fun getCurrentUser() = auth.currentUser
 }

@@ -129,6 +129,6 @@ dependencies {
     implementation("com.aallam.openai:openai-client:3.8.2")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.json:json:20231013")
-
+    implementation("com.google.firebase:firebase-firestore")
 
 }

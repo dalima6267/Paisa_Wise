@@ -34,6 +34,8 @@ import com.dalima.paisawise.R
 import com.dalima.paisawise.ui.theme.DarkerPuple
 import com.dalima.paisawise.viewmodel.AuthViewModel
 import com.dalima.paisawise.viewmodel.CurrencyViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
@@ -43,20 +45,21 @@ fun ProfileScreen(  isDarkMode: Boolean,
                     currencyViewModel: CurrencyViewModel = viewModel(),
                     authViewModel: AuthViewModel = viewModel()
 ) {
-    val userProfile by authViewModel.userProfile.observeAsState()
-
+  val userProfile by authViewModel.userProfile.observeAsState()
+    val context = LocalContext.current
     LaunchedEffect(Unit) {
         authViewModel.fetchUserProfile()
     }
 
-    val userName = userProfile?.name ?: "No Name"
-    val userEmail = userProfile?.email ?: "No Email"
+    val userName = userProfile?.name ?: "User Name"
+    val userEmail = userProfile?.email ?: "Email Not Found"
+
 
     var expanded by remember { mutableStateOf(false) }
     val currencyMap = currencyViewModel.currencies
     val selectedCode = currencyViewModel.selectedCurrency
 
-    val context = LocalContext.current
+
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val coroutineScope = rememberCoroutineScope()
     var showLogoutSheet by remember { mutableStateOf(false) }
@@ -147,7 +150,7 @@ fun ProfileScreen(  isDarkMode: Boolean,
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(40.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

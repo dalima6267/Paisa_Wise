@@ -289,28 +289,13 @@ fun SignUpScreen(    onSwitchClick: () -> Unit,
 
             onClick = {
                 when {
-                    email.isBlank() && password.isBlank() -> {
-                        Toast.makeText(context, "Please enter email and password", Toast.LENGTH_SHORT).show()
-                    }
-                    email.isBlank() -> {
-                        Toast.makeText(context, "Please enter email", Toast.LENGTH_SHORT).show()
-                    }
-                    password.isBlank() -> {
-                        Toast.makeText(context, "Please enter password", Toast.LENGTH_SHORT).show()
-                    }
-                    !viewModel.isValidEmail(email) && viewModel.isValidPassword(password) -> {
-                        Toast.makeText(context, "Please enter a valid email", Toast.LENGTH_SHORT).show()
-                    }
-                    viewModel.isValidEmail(email) && !viewModel.isValidPassword(password) -> {
-                        Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
-                    }
-                    !viewModel.isValidEmail(email) && !viewModel.isValidPassword(password) -> {
-                        Toast.makeText(context, "Invalid email and password", Toast.LENGTH_SHORT).show()
-                    }
-                    else -> {
-                        // All fields valid
-                        viewModel.signUp(name, email, password)
-                    }
+                    name.isBlank() -> Toast.makeText(context, "Enter your name", Toast.LENGTH_SHORT).show()
+                    email.isBlank() -> Toast.makeText(context, "Enter your email", Toast.LENGTH_SHORT).show()
+                    password.isBlank() -> Toast.makeText(context, "Enter your password", Toast.LENGTH_SHORT).show()
+                    !viewModel.isValidEmail(email) -> Toast.makeText(context, "Enter a valid email", Toast.LENGTH_SHORT).show()
+                    !viewModel.isValidPassword(password) -> Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
+
+                    else -> viewModel.signUp(name, email, password)
                 }
             },
             shape = RoundedCornerShape(8.dp),
