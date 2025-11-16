@@ -12,11 +12,6 @@ import com.dalima.paisawise.db.HomeUIState
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-//import com.dalima.paisawise.BuildConfig
-import com.dalima.paisawise.data.ChatMessage
-import com.dalima.paisawise.data.ChatRequest
-import com.dalima.paisawise.data.OpenAIClient
-import io.ktor.client.request.invoke
 import kotlinx.coroutines.Dispatchers
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
@@ -31,8 +26,8 @@ class HomeViewModel(private val expenseDao: ExpenseDao) : ViewModel() {
 
     private val selectedMonth = MutableLiveData(getCurrentMonthName())
 
-    private val _aiReport=MutableLiveData<String>()
-    val aiReport: LiveData<String> = _aiReport
+    private val _aiReport=MutableLiveData<String?>()
+    val aiReport: LiveData<String> = _aiReport as LiveData<String>
 
     val uiState: LiveData<HomeUIState> = MediatorLiveData<HomeUIState>().apply {
         fun updateState(expenses: List<Expense>?, month: String?) {
