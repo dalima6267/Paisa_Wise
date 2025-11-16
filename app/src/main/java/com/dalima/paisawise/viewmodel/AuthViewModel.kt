@@ -9,6 +9,8 @@ import com.dalima.paisawise.repository.AuthRepository
 import com.google.firebase.auth.AuthCredential
 import kotlinx.coroutines.launch
 
+
+
 class AuthViewModel(private val repository: AuthRepository = AuthRepository()) : ViewModel() {
 
     private val _authStatus = MutableLiveData<Result<Unit>?>()
