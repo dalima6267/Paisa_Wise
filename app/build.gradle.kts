@@ -106,6 +106,7 @@ dependencies {
     annotationProcessor("androidx.room:room-compiler:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
 
+
     //livedata
     val lifecycle_version = "2.9.2"
     val arch_version = "2.2.0"
